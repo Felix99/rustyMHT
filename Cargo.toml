@@ -1,0 +1,13 @@
+[package]
+name = "filter"
+version = "0.1.0"
+authors = ["Felix Govaers <felix.govaers@fkie.fraunhofer.de>"]
+
+[dependencies]
+
+rand = "0.3.14"
+numeric = "0.1.3"
+
+[[test]]
+name = "filter"
+path = "tests/lib.rs"

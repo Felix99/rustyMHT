@@ -11,11 +11,14 @@ use tracking_sim::linalg::Linalg;
 
 fn main() {
 	let initState = tensor![0.0,0.0,1.0,0.5];
-	let mut target = Target::new(initState);
-	let dynamics = Dynamics::new(1.0,1.0);
+//	let dynamics = Dynamics::new(1.0,1.0);
+	let mut target = Target::new(initState,2.0,1.0);
+
 	
 	println!("State: {}", target.state);
-	dynamics.move_target(&mut target);
+	target.move_forward();
+	target.move_forward();
+
 	println!("State: {}", target.state);	
 	
 	let mut x = tensor![1.0, 2.0];

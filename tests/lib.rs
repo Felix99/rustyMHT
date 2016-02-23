@@ -3,3 +3,4 @@ extern crate numeric;
 mod integration;
 mod linalg;
 mod dynamics;
+mod sensor;

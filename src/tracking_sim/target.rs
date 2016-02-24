@@ -1,8 +1,8 @@
 #[macro_use(tensor)]
 use numeric::random::RandomState;
 use numeric::Tensor;
-use tracking_sim::linalg::Linalg;
-use tracking_sim::dynamics::Dynamics;
+use tracking_sim::Linalg;
+use tracking_sim::Dynamics;
 
 pub struct Target {
 	pub state : Tensor<f64>,

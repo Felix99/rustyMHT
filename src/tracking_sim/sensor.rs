@@ -1,8 +1,8 @@
 #[macro_use(tensor)]
 use numeric::random::RandomState;
 use numeric::Tensor;
-use tracking_sim::linalg::Linalg;
-use tracking_sim::target::Target;
+use tracking_sim::Linalg;
+use tracking_sim::Target;
 
 pub struct Sensor {
     pub msr_covar : Tensor<f64>,

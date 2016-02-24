@@ -1,4 +1,4 @@
-use filter::tracking_sim::linalg::Linalg;
+use filter::tracking_sim::Linalg;
 use numeric::Tensor;
 #[macro_use(tensor)]
 

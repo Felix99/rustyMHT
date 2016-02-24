@@ -1,6 +1,6 @@
 #[macro_use(tensor)]
-use filter::tracking_sim::target::Target;
-use filter::tracking_sim::dynamics::Dynamics;
+use filter::tracking_sim::Target;
+use filter::tracking_sim::Dynamics;
 use numeric::Tensor;
 
 

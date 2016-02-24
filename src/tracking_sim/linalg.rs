@@ -1,5 +1,5 @@
 #[macro_use(tensor)]
-use numeric::tensor::Tensor;
+use numeric::Tensor;
 use numeric::random::RandomState;
 
 pub struct Linalg {

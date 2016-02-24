@@ -3,8 +3,8 @@
 
 use numeric::random::RandomState;
 use numeric::Tensor;
-use tracking_sim::target::Target;
-use tracking_sim::linalg::Linalg;
+use tracking_sim::Target;
+use tracking_sim::Linalg;
 
 pub struct Dynamics {
 	pub F : Tensor<f64>,

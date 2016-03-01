@@ -78,3 +78,14 @@ pub fn copy_matrix() {
 	assert!(A==B);
 
 }
+
+#[test]
+pub fn inv() {
+	let la = Linalg::new();
+	let A = Tensor::<f64>::new(vec![10.0, 5.0, -3.0, 7.0]).reshape(&[2,2]);
+	let B = la.inv(&A);
+	let result = &Tensor::<f64>::eye(2) - &A.dot(&B);
+	for i in result.slice() {
+		assert!(i.abs() < 0.01);
+	}
+}

@@ -32,6 +32,22 @@ impl Linalg {
 		Tensor::<f64>::eye(dim) * q
 	}
 
+    pub fn inv(&self, a: &Tensor<f64>) -> Tensor<f64> {
+        assert!(a.dim(0) == 2);
+        assert!(a.dim(1) == 2);
+        let mut a_inv = Tensor::<f64>::zeros(&[2,2]);
+        let a0 = self.get(a,0,0);
+        let d0 = self.get(a,1,1);
+        let b0 = self.get(a,0,1);
+        let c0 = self.get(a,1,0);
+        let det = a0 * d0 - b0 * c0;
+        self.set(&mut a_inv, 0,0, d0 / det);
+        self.set(&mut a_inv, 1,1, a0 / det);
+        self.set(&mut a_inv, 0,1, -b0 / det);
+        self.set(&mut a_inv, 1,0, -c0 / det);
+        a_inv
+    }
+
     pub fn copy(&self, A: &Tensor<f64>) -> Tensor<f64> {
         if A.ndim() == 1 {      // Vector
             let mut B = Tensor::<f64>::zeros(&[A.dim(0),1]);

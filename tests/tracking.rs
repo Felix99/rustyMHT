@@ -4,18 +4,15 @@ use filter::tracking_sim::Filter;
 use filter::tracking_sim::Config;
 use filter::tracking_sim::Track;
 use filter::tracking_sim::Hypothesis;
+use filter::tracking_sim::Measurement;
 use numeric::Tensor;
 
 
 #[test]
 fn Kalman_prediction() {
-    let mut config = Config::new();
-    config.p_D = 1.0;
-    config.rho_F = 0.0;
-    let mut filter = Filter::new();
-    filter.set_config(config);
-    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
     let config = Config::new();
+    let mut filter = Filter::new();
+    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
     let mut track = Track::new(&init_state,&config.init_covar,1.0);
     filter.predict(&mut track);
     let final_state = Tensor::<f64>::new(vec![12.0, 13.0, 2.0, 3.0]).reshape(&[4,1]);
@@ -27,6 +24,37 @@ fn Kalman_prediction() {
     let diff_covar = &final_covar - &track.covar;
     for i in diff_covar.slice() {
         assert!(i < &0.01);
+    }
+}
+
+#[test]
+fn Kalman_filtering() {
+    let mut config = Config::new();
+    config.p_D = 1.0;
+    config.rho_F = 0.0;
+    let mut filter = Filter::new();
+    filter.set_config(config);
+    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let config = Config::new();
+    let mut track = Track::new(&init_state,&init_covar,1.0);
+
+    let msr = Measurement {data : Tensor::<f64>::new(vec![8.0, 13.0]).reshape(&[2,1])};
+    filter.update(&mut track, &msr);
+
+    let final_state = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
+    let final_covar = Tensor::<f64>::new(vec![
+    0.9808,    0.0004,    0.0189,    0.0189,
+    0.0004,    0.9808,    0.0189,    0.0189,
+    0.0189,    0.0189,   50.9623,    0.9623,
+    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+    let diff_state = &final_state - &track.state;
+    for i in diff_state.slice() {
+        assert!(i.abs() < 1e-3);
+    }
+    let diff_covar = &final_covar - &track.covar;
+    for i in diff_covar.slice() {
+        assert!(i.abs() < 1e-3);
     }
 }
 

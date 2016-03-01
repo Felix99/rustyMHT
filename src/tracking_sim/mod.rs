@@ -6,6 +6,7 @@ pub mod filter;
 pub mod config;
 pub mod track;
 pub mod hypothesis;
+pub mod measurement;
 
 pub use tracking_sim::dynamics::Dynamics;
 pub use tracking_sim::target::Target;
@@ -15,3 +16,4 @@ pub use tracking_sim::filter::Filter;
 pub use tracking_sim::config::Config;
 pub use tracking_sim::track::Track;
 pub use tracking_sim::hypothesis::Hypothesis;
+pub use tracking_sim::measurement::Measurement;

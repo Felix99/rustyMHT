@@ -6,6 +6,7 @@ use tracking_sim::Sensor;
 use tracking_sim::Dynamics;
 use tracking_sim::Config;
 use tracking_sim::Track;
+use tracking_sim::Measurement;
 
 pub struct Filter {
     pub config : Config,
@@ -43,6 +44,20 @@ impl Filter {
             }
         }
         track.update_state()
+    }
+
+    pub fn update(&self, track: &mut Track, msr: &Measurement) {
+        assert!(msr.data.dim(0) == self.msr_matrix.dim(0));
+        assert!(track.state.dim(0) == self.msr_matrix.dim(1));
+
+        let innovation = &msr.data - &self.msr_matrix.dot(&track.state);
+        let innovation_covar = self.msr_matrix.dot(&track.covar).dot(&self.msr_matrix.transpose())
+            + &self.msr_covar;
+        let innovation_covar_inv = self.la.inv(&innovation_covar);
+        let kalman_gain = track.covar.dot(&self.msr_matrix.transpose()).dot(&innovation_covar_inv);
+        track.state = &track.state + &kalman_gain.dot(&innovation);
+        track.covar = &track.covar - &kalman_gain.dot(&innovation_covar).dot(&kalman_gain.transpose());
+
     }
 
 }

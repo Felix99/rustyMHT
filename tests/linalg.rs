@@ -3,6 +3,21 @@ use numeric::Tensor;
 #[macro_use(tensor)]
 
 #[test]
+fn matrix_copy() {
+    let Q = Tensor::<f64>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).reshape(&[2,4]);
+    let la = Linalg::new();
+    let B = la.copy(&Q);
+    assert!(Q == B);
+
+    let q = Tensor::<f64>::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    let b = la.copy(&q);
+    let result = b - &q.reshape(&[8,1]);
+    for i in result.slice() {
+        assert!(i.abs() < 0.001);
+    }
+}
+
+#[test]
 fn cholesky_decomposition() {
 	let T = 2.0_f64;
 

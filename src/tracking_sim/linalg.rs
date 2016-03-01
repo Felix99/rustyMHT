@@ -28,16 +28,30 @@ impl Linalg {
 		data[i * dim1 + j] = val;
 	}
 
+	pub fn scalar_matrix(q: f64, dim: usize) -> Tensor<f64> {
+		Tensor::<f64>::eye(dim) * q
+	}
+
     pub fn copy(&self, A: &Tensor<f64>) -> Tensor<f64> {
-        let mut B = Tensor::<f64>::zeros(&[A.dim(0),A.dim(1)]);
-        let dim0 = A.dim(0);
-        let dim1 = A.dim(1);
-        for i in 0..dim0 {
-            for j in 0..dim1 {
-                self.set(&mut B,i,j,self.get(A,i,j));
+        if A.ndim() == 1 {      // Vector
+            let mut B = Tensor::<f64>::zeros(&[A.dim(0),1]);
+            let dim0 = A.dim(0);
+            let data = A.slice();
+            for i in 0..dim0 {
+                    self.set(&mut B,i,0,data[i]);
+                }
+            B
+        } else {                // Matrix
+            let mut B = Tensor::<f64>::zeros(&[A.dim(0),A.dim(1)]);
+            let dim0 = A.dim(0);
+            let dim1 = A.dim(1);
+            for i in 0..dim0 {
+                for j in 0..dim1 {
+                    self.set(&mut B,i,j,self.get(A,i,j));
+                }
             }
+            B
         }
-        B
     }
 	
 	// Cholesky decomposition taken from https://de.wikipedia.org/wiki/Cholesky-Zerlegung

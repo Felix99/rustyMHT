@@ -60,4 +60,8 @@ impl Filter {
 
     }
 
+    pub fn update_mht(&self, track: &mut Track, msr: &Vec<Measurement>) {
+
+    }
+
 }

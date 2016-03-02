@@ -6,6 +6,7 @@ use filter::tracking_sim::Track;
 use filter::tracking_sim::Hypothesis;
 use filter::tracking_sim::Measurement;
 use numeric::Tensor;
+use std::f64;
 
 
 #[test]
@@ -36,10 +37,10 @@ fn Kalman_filtering() {
     filter.set_config(config);
     let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
     let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
-    let config = Config::new();
     let mut track = Track::new(&init_state,&init_covar,1.0);
 
-    let msr = Measurement {data : Tensor::<f64>::new(vec![8.0, 13.0]).reshape(&[2,1])};
+//    let msr = Measurement {data : Tensor::<f64>::new(vec![8.0, 13.0]).reshape(&[2,1])};
+    let msr = Measurement::new(vec![8.0, 13.0]);
     filter.update(&mut track, &msr);
 
     let final_state = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
@@ -90,5 +91,67 @@ fn Hypotheses_merged() {
         assert!(i < &0.01);
     }
 }
+
+#[test]
+fn multi_hypotheses_update() {
+    let mut config = Config::new();
+    config.p_D = 0.9;
+    config.rho_F = 1e-5;
+    let mut filter = Filter::new();
+    filter.set_config(config);
+    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let mut track = Track::new(&init_state,&init_covar,1.0);
+
+    let msr1 = Measurement::new(vec![8.0, 13.0]);
+    let msr2 = Measurement::new(vec![18.0, 10.0]);
+    let msr3 = Measurement::new(vec![5.0, 15.0]);
+    let msrs = vec![msr1,msr2,msr3];
+    filter.update_mht(&mut track, &msrs);
+
+    let final_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let final_state2 = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
+    let final_state3 = Tensor::<f64>::new(vec![17.8461,10.0030, 2.1509, 3.1509]).reshape(&[4,1]);
+    let final_state4 = Tensor::<f64>::new(vec![5.0980, 14.9020, 2.0000, 3.0000]).reshape(&[4,1]);
+    let final_states = vec![final_state1,final_state2,final_state3,final_state4];
+    let final_covar = Tensor::<f64>::new(vec![
+    0.9808,    0.0004,    0.0189,    0.0189,
+    0.0004,    0.9808,    0.0189,    0.0189,
+    0.0189,    0.0189,   50.9623,    0.9623,
+    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+
+    assert!(&track.hypotheses.len() > &0);
+    for h in track.hypotheses.iter() {
+        let mut dist = f64::INFINITY;
+        for state in final_states.iter() {
+            let dist_i = state - &h.state;
+            let d_i = dist_i.transpose().dot(&dist_i).slice()[0].sqrt();
+            if d_i < dist {
+                dist = d_i;
+            }
+        }
+        assert!(dist < 1e-2);
+    }
+
+
+
+    /* Matlab code for checking.
+    x0 = [10 10 2 3]';
+    P0 = ones(4,4) + eye(4) * 50;
+    z = [8 13; 18 10; 5 15]'
+    R = eye(2)
+    H = kron(eye(2),[1 0])
+    H = kron([1 0], eye(2))
+    S = H * P0 * H' + R;
+    W = P * H' * S^-1;
+    W = P0 * H' * S^-1;
+    P = P0 - W*S*W'
+    x0 + W(z(:,1) - H*x0)
+    x0 + W*(z(:,1) - H*x0)
+    x0 + W*(z(:,2) - H*x0)
+    x0 + W*(z(:,3) - H*x0)
+        */
+}
+
 
 

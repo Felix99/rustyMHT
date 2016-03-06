@@ -89,3 +89,21 @@ pub fn inv() {
 		assert!(i.abs() < 0.01);
 	}
 }
+
+#[test]
+pub fn mvnpdf() {
+    let x = Tensor::<f64>::new(vec![2.0, 5.0]).reshape(&[2,1]);
+    let m = Tensor::<f64>::new(vec![1.0, 3.0]).reshape(&[2,1]);
+    let c = Tensor::<f64>::new(vec![10.0, 3.0, 3.0, 8.0]).reshape(&[2,2]);
+    let la = Linalg::new();
+    let res = la.normal(&x,&m,&c);
+    assert!(res - 0.014658 < 1e-4);
+}
+
+#[test]
+pub fn det() {
+    let c = Tensor::<f64>::new(vec![10.0, 3.0, 3.0, 8.0]).reshape(&[2,2]);
+    let la = Linalg::new();
+    let res = la.det(&c);
+    assert!(res - 71.0 < 1e-4);
+}

@@ -114,18 +114,47 @@ fn multi_hypotheses_update() {
     let final_state3 = Tensor::<f64>::new(vec![17.8461,10.0030, 2.1509, 3.1509]).reshape(&[4,1]);
     let final_state4 = Tensor::<f64>::new(vec![5.0980, 14.9020, 2.0000, 3.0000]).reshape(&[4,1]);
     let final_states = vec![final_state1,final_state2,final_state3,final_state4];
+    let final_weights = vec![0.000008, 0.433033, 0.265726, 0.301233];
     let final_covar = Tensor::<f64>::new(vec![
     0.9808,    0.0004,    0.0189,    0.0189,
     0.0004,    0.9808,    0.0189,    0.0189,
     0.0189,    0.0189,   50.9623,    0.9623,
     0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+    let final_covars = vec![init_covar,final_covar];
 
-    assert!(&track.hypotheses.len() > &0);
+    assert!(&track.hypotheses.len() == &4);
+    // state
     for h in track.hypotheses.iter() {
         let mut dist = f64::INFINITY;
         for state in final_states.iter() {
             let dist_i = state - &h.state;
+
             let d_i = dist_i.transpose().dot(&dist_i).slice()[0].sqrt();
+            if d_i < dist {
+                dist = d_i;
+            }
+        }
+        assert!(dist < 1e-2);
+    }
+
+    // check weights
+    for h in track.hypotheses.iter() {
+        let mut dist = f64::INFINITY;
+        for weight in final_weights.iter() {
+            let d_i = weight - h.weight;
+            if d_i < dist {
+                dist = d_i;
+            }
+        }
+        assert!(dist < 1e-2);
+    }
+
+    // check covariances
+    for h in track.hypotheses.iter() {
+        let mut dist = f64::INFINITY;
+        for covar in final_covars.iter() {
+            let diff = covar - &h.covar;
+            let d_i = diff.slice().iter().fold(0_f64, |a,e| a+e);
             if d_i < dist {
                 dist = d_i;
             }
@@ -136,22 +165,72 @@ fn multi_hypotheses_update() {
 
 
     /* Matlab code for checking.
+    p_D = 0.95
+    rho_F = 1e-6
     x0 = [10 10 2 3]';
     P0 = ones(4,4) + eye(4) * 50;
     z = [8 13; 18 10; 5 15]'
     R = eye(2)
-    H = kron(eye(2),[1 0])
     H = kron([1 0], eye(2))
     S = H * P0 * H' + R;
-    W = P * H' * S^-1;
     W = P0 * H' * S^-1;
     P = P0 - W*S*W'
-    x0 + W(z(:,1) - H*x0)
-    x0 + W*(z(:,1) - H*x0)
-    x0 + W*(z(:,2) - H*x0)
-    x0 + W*(z(:,3) - H*x0)
+    x1 = x0 + W*(z(:,1) - H*x0)
+    x2 = x0 + W*(z(:,2) - H*x0)
+    x3 = x0 + W*(z(:,3) - H*x0)
+    w0 = 1-p_D;
+    w1 = p_D / rho_F * mvnpdf(z(:,1),H * x0, S)
+    w2 = p_D / rho_F * mvnpdf(z(:,2),H * x0, S)
+    w3 = p_D / rho_F * mvnpdf(z(:,3),H * x0, S)
+    sum = w0+w1+w2+w3
+    w0 = w0 / sum
+    w1 = w1 / sum
+    w2 = w2 / sum
+    w3 = w3 / sum
+    fprintf('%f, %f, %f, %f\n',w0,w1,w2,w3)
         */
 }
 
+#[test]
+fn normalize_weights() {
+    let init_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_state2 = Tensor::<f64>::new(vec![20.0, 25.0, -1.0, 2.0]).reshape(&[4,1]);
+    let init_covar1 = Tensor::<f64>::eye(4) * 100.0;
+    let init_covar2 = Tensor::<f64>::eye(4) * 75.0;
+    let weight1 = 3.4;
+    let weight2 = 2.6;
+    let mut track = Track::new(&init_state1,&init_covar1,1.0);
+    track.hypotheses = vec![Hypothesis::new(&init_state1,&init_covar1,weight1),
+        Hypothesis::new(&init_state2,&init_covar2,weight2)];
+
+    track.normalize_weights();
+
+    let sum = track.hypotheses[0].weight + track.hypotheses[1].weight;
+    assert!(sum - 1.0 <1e-5);
+
+}
+
+
+#[test]
+fn gating() {
+    let mut config = Config::new();
+    config.p_D = 0.9;
+    config.rho_F = 1e-5;
+    let mut filter = Filter::new();
+    filter.set_config(config);
+    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let mut track = Track::new(&init_state,&init_covar,1.0);
+
+    let msr1 = Measurement::new(vec![8.0, 13.0]);
+    let msr2 = Measurement::new(vec![18.0, 10.0]);
+    let msr3 = Measurement::new(vec![5.0, 15.0]);
+    let msr4 = Measurement::new(vec![25.0, -15.0]);
+    let msr5 = Measurement::new(vec![-5.0, 35.0]);
+    let msrs = vec![msr1,msr2,msr3];
+    let gated = filter.gate(&track, &msrs);
+
+    assert!(gated.len() == 3);
+}
 
 

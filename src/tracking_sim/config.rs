@@ -8,6 +8,7 @@ pub struct Config {
     pub init_covar : Tensor<f64>,
     pub p_D : f64,
     pub rho_F : f64,
+    pub mu_gating : f64,
 }
 
 impl Config {
@@ -20,6 +21,7 @@ impl Config {
             init_covar :  Tensor::<f64>::eye(4) * 100.0,
             p_D : 0.95,
             rho_F : 1e-6,
+            mu_gating : 9.21,
         }
     }
 }

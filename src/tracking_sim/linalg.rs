@@ -1,6 +1,7 @@
 #[macro_use(tensor)]
 use numeric::Tensor;
 use numeric::random::RandomState;
+use std::f64::consts::PI;
 
 pub struct Linalg {
 	i : i32,
@@ -46,6 +47,14 @@ impl Linalg {
         self.set(&mut a_inv, 0,1, -b0 / det);
         self.set(&mut a_inv, 1,0, -c0 / det);
         a_inv
+    }
+
+    pub fn det(&self, a: &Tensor<f64>) -> f64 {
+        let a0 = self.get(a,0,0);
+        let d0 = self.get(a,1,1);
+        let b0 = self.get(a,0,1);
+        let c0 = self.get(a,1,0);
+        a0 * d0 - b0 * c0
     }
 
     pub fn copy(&self, A: &Tensor<f64>) -> Tensor<f64> {
@@ -107,4 +116,21 @@ impl Linalg {
         let zero_mean_mvn = L.dot(&stn);
         zero_mean_mvn + mean
 	}
+
+    pub fn stat_dist(&self, x: &Tensor<f64>, mean: &Tensor<f64>, covar: &Tensor<f64>) -> f64 {
+        let covar_inv = self.inv(covar);
+        let x_cpy = self.copy(x);
+        let d = &x_cpy - mean;
+        let q = d.transpose().dot(&covar_inv).dot(&d);
+        self.get(&q,0,0)
+    }
+
+    pub fn normal(&self, x: &Tensor<f64>, mean: &Tensor<f64>, covar: &Tensor<f64>) -> f64 {
+        let det = self.det(covar);
+        let c = 1_f64 / ((2_f64 * PI).powf(2_f64) * det).sqrt();
+        let q = self.stat_dist(x,mean,covar);
+        let e_q = (-1_f64 / 2_f64 * q).exp();
+        c * e_q
+    }
+
 }

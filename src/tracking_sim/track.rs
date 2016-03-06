@@ -26,6 +26,7 @@ impl Track {
 
     pub fn update_state(&mut self) {
         assert!(!self.hypotheses.is_empty());
+        self.normalize_weights();
         self.state = self.hypotheses.iter().fold(Tensor::zeros(&[self.dim,1]), |s,e| {
             let m = Tensor::eye(self.dim) * e.weight;
             s + &m.dot(&e.state)
@@ -39,6 +40,15 @@ impl Track {
             a + &m.dot(&unweighted)
         });
 
+    }
+
+    pub fn normalize_weights(&mut self) {
+        let sum = self.hypotheses.iter().fold(0_f64, |a,e| a + e.weight);
+        unsafe {
+            for h in self.hypotheses.as_mut_slice() {
+                h.weight = h.weight / sum;
+            }
+        }
     }
 }
 

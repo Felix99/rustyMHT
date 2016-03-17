@@ -133,4 +133,21 @@ impl Linalg {
         c * e_q
     }
 
+    pub fn uniform(&mut self, lower: f64, upper: f64) -> f64 {
+        let z = self.rs.uniform::<f64>(lower, upper, &[1]);
+        z.slice()[0]
+    }
+
+    pub fn poisson(&mut self,lambda : f64) -> i32 {
+        let l = (-lambda).exp();
+        let mut k = 0i32;
+        let mut p = 1_f64;
+        loop {
+            k = k + 1i32;
+            p = p * self.uniform(0_f64,1_f64);
+            if p < l {break};
+        }
+        k-1
+    }
+
 }

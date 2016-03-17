@@ -9,6 +9,7 @@ pub struct Config {
     pub p_D : f64,
     pub rho_F : f64,
     pub mu_gating : f64,
+    pub fov : Option<((f64,f64),(f64,f64))>,
 }
 
 impl Config {
@@ -22,6 +23,7 @@ impl Config {
             p_D : 0.95,
             rho_F : 1e-6,
             mu_gating : 9.21,
+            fov : None,
         }
     }
 }

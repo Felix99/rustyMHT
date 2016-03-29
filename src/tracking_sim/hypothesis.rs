@@ -16,4 +16,8 @@ impl Hypothesis {
             weight : weight,
         }
     }
+
+    pub fn copy(&self) -> Hypothesis {
+        Hypothesis::new(&self.state,&self.covar,self.weight)
+    }
 }

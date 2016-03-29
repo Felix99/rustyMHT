@@ -233,4 +233,38 @@ fn gating() {
     assert!(gated.len() == 3);
 }
 
+#[test]
+fn hypothesis_merging() {
+    let mut config = Config::new();
+    config.p_D = 0.9;
+    config.rho_F = 1e-5;
+    let mut filter = Filter::new();
+    filter.set_config(config);
+    let init_covar1 = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let init_covar2 = Tensor::<f64>::new(vec![
+    0.9808,    0.0004,    0.0189,    0.0189,
+    0.0004,    0.9808,    0.0189,    0.0189,
+    0.0189,    0.0189,   50.9623,    0.9623,
+    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+
+    let init_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_state2 = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
+    let init_state3 = Tensor::<f64>::new(vec![17.8461,10.0030, 2.1509, 3.1509]).reshape(&[4,1]);
+    let init_state4 = Tensor::<f64>::new(vec![5.0980, 14.9020, 2.0000, 3.0000]).reshape(&[4,1]);
+    let weights = vec![0.000008, 0.433033, 0.265726, 0.301233];
+
+    let h1 = Hypothesis::new(&init_state1,&init_covar1,weights[0]);
+    let h2 = Hypothesis::new(&init_state2,&init_covar2,weights[1]);
+    let h3 = Hypothesis::new(&init_state3,&init_covar1,weights[2]);
+    let h4 = Hypothesis::new(&init_state4,&init_covar2,weights[3]);
+
+    let mut track = Track::new(&init_state1,&init_covar1,1.0);
+    track.hypotheses = vec![h1,h2,h3,h4];
+
+    track.merge_hypotheses();
+    assert!(track.hypotheses.len() < 4);
+    let weights_new : f64 = track.hypotheses.iter().fold(0_f64, |a,e| a + e.weight);
+    assert!((&weights_new-1.0_f64).abs() < 1e-4);
+
+}
 

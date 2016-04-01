@@ -18,10 +18,6 @@ impl Linalg {
 		}
 	}
 	
-	pub fn get(&self, A: &Matrix<f64>,i: usize, j: usize) -> f64 {
-		A[[i,j]]
-	}
-	
 	pub fn set(&self, A: &mut Matrix<f64>, i:usize, j:usize, val: f64) {
 		let dim1 = A.cols();
 		let mut data = A.mut_data();
@@ -44,7 +40,7 @@ impl Linalg {
             let dim1 = A.cols();
             for i in 0..dim0 {
                 for j in 0..dim1 {
-                    self.set(&mut B,i,j,self.get(A,i,j));
+                    self.set(&mut B,i,j,A[[i,j]]);
                 }
             }
             B
@@ -74,10 +70,9 @@ impl Linalg {
 
     pub fn stat_dist(&self, x: &Matrix<f64>, mean: &Matrix<f64>, covar: &Matrix<f64>) -> f64 {
         let covar_inv = covar.inverse();
-        let x_cpy = self.copy(x);
-        let d = &x_cpy - mean;
-        let q = &d.transpose() * &covar_inv * &d;
-        self.get(&q,0,0)
+        let d = x - mean;
+        (&d.transpose() * &covar_inv * &d)[[0,0]]
+
     }
 
     pub fn normal(&self, x: &Matrix<f64>, mean: &Matrix<f64>, covar: &Matrix<f64>) -> f64 {

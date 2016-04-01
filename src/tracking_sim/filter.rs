@@ -116,8 +116,8 @@ impl Filter {
         let mut msrs_gated = vec![];
         for z in msrs.iter() {
             let nu = &z.data - &z_hat;
-            let dist = nu.transpose() * &innovation_covar_inv * &nu;
-            if self.la.get(&dist,0,0) < self.config.mu_gating {
+            let dist = (nu.transpose() * &innovation_covar_inv * &nu)[[0,0]];
+            if dist < self.config.mu_gating {
                 let z_copy = z.copy();
                 msrs_gated.push(z_copy);
             }

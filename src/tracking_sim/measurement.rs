@@ -12,10 +12,11 @@ impl Measurement {
         }
     }
 
-    pub fn copy(&self) -> Measurement {
-        Measurement {
-            data : self.data.select_cols(&[0]),
-        }
+}
+
+impl Clone for Measurement {
+    fn clone(&self) -> Measurement {
+        Measurement { data : self.data.clone() }
     }
 }
 

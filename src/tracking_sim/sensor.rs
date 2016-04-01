@@ -22,10 +22,7 @@ impl Sensor {
         if self.config.rho_F > 0.0 {
             let mut fa = self.false_measurements();
             for z in self.target_measurement(target).iter() {
-                let z_copy = Measurement {
-                    data: self.la.copy(&z.data),
-                };
-                fa.push(z_copy);
+                fa.push(z.clone());
             }
             fa
         } else {

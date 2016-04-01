@@ -15,8 +15,8 @@ impl Track {
     pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, time : f64) -> Track {
         let la = Linalg::new();
         Track {
-            state : la.copy(state),
-            covar : la.copy(covar),
+            state : state.clone(),
+            covar : covar.clone(),
             time : time,
             hypotheses : vec![Hypothesis::new(state,covar,1.0)],
             dim : state.rows(),
@@ -50,7 +50,7 @@ impl Track {
 
     pub fn merge_hypotheses(&mut self) {
         let mut merged_hypos = Vec::new();
-        let hypotheses_copy = self.hypotheses.iter().map(|h| h.copy()).collect();
+        let hypotheses_copy = self.hypotheses.clone();
         merged_hypos = self.merge_local(hypotheses_copy, merged_hypos);
         self.hypotheses = merged_hypos;
     }
@@ -69,13 +69,13 @@ impl Track {
 
     fn find_elements_to_merge_with_tail(&self, mut list_of_hypos : Vec<Hypothesis>) -> (Vec<Hypothesis>,Vec<Hypothesis>) {
         let h_tail = list_of_hypos.pop().unwrap();
-        let mut to_merge = vec![h_tail.copy()];
+        let mut to_merge = vec![h_tail.clone()];
         let mut not_to_merge = Vec::new();
         for h in list_of_hypos.iter() {
             if self.hypotheses_are_close(&h,&h_tail) {
-                to_merge.push(h.copy());
+                to_merge.push(h.clone());
             } else {
-                not_to_merge.push(h.copy());
+                not_to_merge.push(h.clone());
             }
         }
         (to_merge,not_to_merge)
@@ -100,6 +100,18 @@ impl Track {
             a + &unweighted * e.weight
         });
         Hypothesis::new(&mean,&covar,weight)
+    }
+}
+
+impl Clone for Track {
+    fn clone(&self) -> Track {
+        Track {
+            state : self.state.clone(),
+            covar : self.covar.clone(),
+            time : self.time,
+            hypotheses : self.hypotheses.clone(),
+            dim : self.dim,
+        }
     }
 }
 

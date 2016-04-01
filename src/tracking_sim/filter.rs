@@ -22,16 +22,16 @@ impl Filter {
         let la = Linalg::new();
         Filter {
             config : Config::new(),
-            msr_covar : la.copy(&config.msr_covar),
-            msr_matrix : la.copy(&config.msr_matrix),
+            msr_covar : config.msr_covar.clone(),
+            msr_matrix : config.msr_matrix.clone(),
             la : Linalg::new(),
             dynamics : Dynamics::new(config.delta_t, config.q),
         }
     }
 
     pub fn set_config(&mut self, config: Config) {
-        self.msr_covar = self.la.copy(&config.msr_covar);
-        self.msr_matrix = self.la.copy(&config.msr_matrix);
+        self.msr_covar = config.msr_covar.clone();
+        self.msr_matrix = config.msr_matrix.clone();
         self.dynamics = Dynamics::new(config.delta_t, config.q);
         self.config = config;
     }
@@ -95,8 +95,8 @@ impl Filter {
     }
 
     pub fn create_hypotheses(&self, hypo: &Hypothesis, msrs: &Vec<Measurement>) -> Vec<Hypothesis> {
-        let state = self.la.copy(&hypo.state);
-        let covar = self.la.copy(&hypo.covar);
+        let state = &hypo.state;
+        let covar = &hypo.covar;
         let p_0 = (1_f64-self.config.p_D) * hypo.weight;
         let h0 = Hypothesis::new(&state, &covar, p_0);
         let mut hypos = vec![h0];
@@ -118,8 +118,7 @@ impl Filter {
             let nu = &z.data - &z_hat;
             let dist = (nu.transpose() * &innovation_covar_inv * &nu)[[0,0]];
             if dist < self.config.mu_gating {
-                let z_copy = z.copy();
-                msrs_gated.push(z_copy);
+                msrs_gated.push(z.clone());
             }
         }
         msrs_gated

@@ -11,13 +11,16 @@ impl Hypothesis {
     pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, weight : f64) -> Hypothesis {
         let la = Linalg::new();
         Hypothesis {
-            state : la.copy(state),
-            covar : la.copy(covar),
+            state : state.clone(),
+            covar : covar.clone(),
             weight : weight,
         }
     }
 
-    pub fn copy(&self) -> Hypothesis {
+}
+
+impl Clone for Hypothesis {
+    fn clone(&self) -> Hypothesis {
         Hypothesis::new(&self.state,&self.covar,self.weight)
     }
 }

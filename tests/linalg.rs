@@ -1,23 +1,6 @@
 use filter::tracking_sim::Linalg;
 use rm::linalg::matrix::Matrix;
 
-#[test]
-fn matrix_copy() {
-    let Q = Matrix::<f64>::new(2,4,vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    let la = Linalg::new();
-    let B = la.copy(&Q);
-    let res = &Q- &B;
-    for i in res.data() {
-        assert!(i.abs() < 1e-3);
-    }
-
-    let q = Matrix::<f64>::new(8,1,vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    let b = la.copy(&q);
-    let result = &b - &q;
-    for i in result.data() {
-        assert!(i.abs() < 0.001);
-    }
-}
 
 #[test]
 fn cholesky_decomposition() {
@@ -72,17 +55,6 @@ fn mvnrnd_draw_multivariate_numbers() {
 	}
 }
 
-#[test]
-pub fn copy_matrix() {
-	let la = Linalg::new();
-	let A = Matrix::<f64>::new(3,2,vec![10.0, 4.0, -30.0, 7.0, 3.0, -2.0]);
-	let B = la.copy(&A);
-    let res = &B- &A;
-	for i in res.data() {
-        assert!(i.abs() < 1e-4)
-    }
-
-}
 
 #[test]
 pub fn inv() {

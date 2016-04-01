@@ -23,29 +23,7 @@ impl Linalg {
 		let mut data = A.mut_data();
 		data[i * dim1 + j] = val;
 	}
-    
-    
-    pub fn copy(&self, A: &Matrix<f64>) -> Matrix<f64> {
-        if A.cols() == 1 {      // Vector
-            let mut B = Matrix::<f64>::zeros(A.rows(),1);
-            let dim0 = A.rows();
-            let data = A.data();
-            for i in 0..dim0 {
-                    self.set(&mut B,i,0,data[i]);
-                }
-            B
-        } else {                // Matrix
-            let mut B = Matrix::<f64>::zeros(A.rows(),A.cols());
-            let dim0 = A.rows();
-            let dim1 = A.cols();
-            for i in 0..dim0 {
-                for j in 0..dim1 {
-                    self.set(&mut B,i,j,A[[i,j]]);
-                }
-            }
-            B
-        }
-    }
+
 
     pub fn gen_std_normal_vec(&mut self, n: usize) -> Matrix<f64> {
         let mut b = Matrix::<f64>::zeros(n,1);

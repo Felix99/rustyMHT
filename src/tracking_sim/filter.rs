@@ -1,6 +1,5 @@
-#[macro_use(tensor)]
-use numeric::random::RandomState;
-use numeric::Tensor;
+#[macro_use(Matrix)]
+use rm::linalg::matrix::Matrix;
 use tracking_sim::Linalg;
 use tracking_sim::Sensor;
 use tracking_sim::Dynamics;
@@ -11,8 +10,8 @@ use tracking_sim::Hypothesis;
 
 pub struct Filter {
     pub config : Config,
-    pub msr_covar : Tensor<f64>,
-    pub msr_matrix : Tensor<f64>,
+    pub msr_covar : Matrix<f64>,
+    pub msr_matrix : Matrix<f64>,
     la : Linalg,
     dynamics : Dynamics
 }
@@ -40,16 +39,16 @@ impl Filter {
     pub fn predict(&self, track: &mut Track) {
         unsafe {
             for h in track.hypotheses.as_mut_slice() {
-                h.state = self.dynamics.F.dot(&h.state);
-                h.covar = self.dynamics.F.dot(&h.covar).dot(&self.dynamics.F.transpose()) + &self.dynamics.Q;
+                h.state = &self.dynamics.F * &h.state;
+                h.covar = &self.dynamics.F * &h.covar * &self.dynamics.F.transpose() + &self.dynamics.Q;
             }
         }
         track.update_state()
     }
 
     pub fn update(&self, track: &mut Track, msr: &Measurement) {
-        assert!(msr.data.dim(0) == self.msr_matrix.dim(0));
-        assert!(track.state.dim(0) == self.msr_matrix.dim(1));
+        assert!(msr.data.rows() == self.msr_matrix.rows());
+        assert!(track.state.rows() == self.msr_matrix.cols());
         if track.hypotheses.is_empty() {
             let mut h = Hypothesis::new(&track.state,&track.covar,1.0);
             self.update_hypothesis(&mut h, msr);
@@ -67,19 +66,19 @@ impl Filter {
     }
 
     pub fn update_hypothesis(&self, hypo: &mut Hypothesis, msr: &Measurement) {
-        assert!(msr.data.dim(0) == self.msr_matrix.dim(0));
-        assert!(hypo.state.dim(0) == self.msr_matrix.dim(1));
+        assert!(msr.data.rows() == self.msr_matrix.rows());
+        assert!(hypo.state.rows() == self.msr_matrix.cols());
 
-        let innovation = &msr.data - &self.msr_matrix.dot(&hypo.state);
-        let innovation_covar = self.msr_matrix.dot(&hypo.covar).dot(&self.msr_matrix.transpose())
+        let innovation = &msr.data - &self.msr_matrix * &hypo.state;
+        let innovation_covar = &self.msr_matrix * &hypo.covar * &self.msr_matrix.transpose()
         + &self.msr_covar;
-        let innovation_covar_inv = self.la.inv(&innovation_covar);
-        let kalman_gain = hypo.covar.dot(&self.msr_matrix.transpose()).dot(&innovation_covar_inv);
-        hypo.state = &hypo.state + &kalman_gain.dot(&innovation);
-        hypo.covar = &hypo.covar - &kalman_gain.dot(&innovation_covar).dot(&kalman_gain.transpose());
+        let innovation_covar_inv = innovation_covar.inverse();
+        let kalman_gain = &hypo.covar * &self.msr_matrix.transpose() * &innovation_covar_inv;
+        hypo.state = &hypo.state + &kalman_gain * &innovation;
+        hypo.covar = &hypo.covar - &kalman_gain * &innovation_covar * &kalman_gain.transpose();
         hypo.weight = if self.config.rho_F > 0.0 {
             self.config.p_D / self.config.rho_F * hypo.weight *
-                self.la.normal(&innovation,&Tensor::<f64>::new(vec![0.0,0.0]).reshape(&[2,1]), &innovation_covar)
+                self.la.normal(&innovation,&Matrix::<f64>::new(2,1,vec![0.0,0.0]), &innovation_covar)
         } else {
             1_f64
         };
@@ -110,16 +109,16 @@ impl Filter {
     }
 
     pub fn gate(&self, track: &Track, msrs: &Vec<Measurement>) -> Vec<Measurement> {
-        let innovation_covar = self.msr_matrix.dot(&track.covar).dot(&self.msr_matrix.transpose())
+        let innovation_covar = &self.msr_matrix * &track.covar * &self.msr_matrix.transpose()
         + &self.msr_covar;
-        let innovation_covar_inv = self.la.inv(&innovation_covar);
-        let z_hat = self.msr_matrix.dot(&track.state);
+        let innovation_covar_inv = innovation_covar.inverse();
+        let z_hat = &self.msr_matrix * &track.state;
         let mut msrs_gated = vec![];
         for z in msrs.iter() {
             let nu = &z.data - &z_hat;
-            let dist = nu.transpose().dot(&innovation_covar_inv).dot(&nu);
+            let dist = nu.transpose() * &innovation_covar_inv * &nu;
             if self.la.get(&dist,0,0) < self.config.mu_gating {
-                let z_copy = Measurement::new(z.data.data().clone());
+                let z_copy = z.copy();
                 msrs_gated.push(z_copy);
             }
         }

@@ -1,43 +1,40 @@
-#[macro_use(tensor)]
+use rm::linalg::matrix::Matrix;
 
-use numeric::Tensor;
 use tracking_sim::Linalg;
 use tracking_sim::Hypothesis;
 
 pub struct Track {
-    pub state : Tensor<f64>,
-    pub covar : Tensor<f64>,
+    pub state : Matrix<f64>,
+    pub covar : Matrix<f64>,
     pub time : f64,
     pub hypotheses : Vec<Hypothesis>,
     dim : usize,
 }
 
 impl Track {
-    pub fn new(state : &Tensor<f64>, covar: &Tensor<f64>, time : f64) -> Track {
+    pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, time : f64) -> Track {
         let la = Linalg::new();
         Track {
             state : la.copy(state),
             covar : la.copy(covar),
             time : time,
             hypotheses : vec![Hypothesis::new(state,covar,1.0)],
-            dim : state.dim(0),
+            dim : state.rows(),
         }
     }
 
     pub fn update_state(&mut self) {
         assert!(!self.hypotheses.is_empty());
         self.normalize_weights();
-        self.state = self.hypotheses.iter().fold(Tensor::zeros(&[self.dim,1]), |s,e| {
-            let m = Tensor::eye(self.dim) * e.weight;
-            s + &m.dot(&e.state)
+        self.state = self.hypotheses.iter().fold(Matrix::zeros(self.dim,1), |s,e| {
+            s + &e.state * e.weight
         });
 
-        self.covar = self.hypotheses.iter().fold(Tensor::zeros(&[self.dim,self.dim]), |a,e| {
-            let m = Tensor::eye(self.dim) * e.weight;
+        self.covar = self.hypotheses.iter().fold(Matrix::zeros(self.dim,self.dim), |a,e| {
             let v = &e.state - &self.state;
-            let spread = v.dot(&v.transpose());
-            let unweighted = &e.covar + &spread;
-            a + &m.dot(&unweighted)
+            let spread = &v * &v.transpose();
+            let unweighted = &e.covar + spread;
+            a + unweighted * e.weight
         });
 
     }
@@ -86,23 +83,21 @@ impl Track {
 
     fn hypotheses_are_close(&self, h1: &Hypothesis, h2: &Hypothesis) -> bool {
         let d = &h1.state - &h2.state;
-        let la = Linalg::new();
-        let dist = la.get(&d.transpose().dot(&d),0,0);
-        dist < 15.0
+        let metric = (&h1.covar + &h2.covar).inverse();
+        let stat_dist = &d.transpose() * metric * &d;
+        stat_dist[[0,0]]< 12.23
     }
 
     fn merge_all(&self, to_merge: Vec<Hypothesis>) -> Hypothesis {
         let weight = to_merge.iter().fold(0_f64, |a,e| a + e.weight);
-        let mean = to_merge.iter().fold(Tensor::<f64>::zeros(&[self.dim,1]), |a,e| {
-            let m = Tensor::eye(self.dim) * e.weight;
-            a + &m.dot(&e.state)
+        let mean = to_merge.iter().fold(Matrix::<f64>::zeros(self.dim,1), |a,e| {
+            a + &e.state * e.weight
         });
-        let covar = to_merge.iter().fold(Tensor::<f64>::zeros(&[self.dim,self.dim]), |a,e| {
-            let m = Tensor::eye(self.dim) * e.weight;
+        let covar = to_merge.iter().fold(Matrix::<f64>::zeros(self.dim,self.dim), |a,e| {
             let v = &e.state - &mean;
-            let spread = v.dot(&v.transpose());
-            let unweighted = &e.covar + &spread;
-            a + &m.dot(&unweighted)
+            let spread = &v * &v.transpose();
+            let unweighted = &e.covar + spread;
+            a + &unweighted * e.weight
         });
         Hypothesis::new(&mean,&covar,weight)
     }

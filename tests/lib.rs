@@ -1,5 +1,5 @@
-#[macro_use] extern crate filter;
-extern crate numeric;
+extern crate filter;
+extern crate rusty_machine as rm;
 mod integration;
 mod linalg;
 mod dynamics;

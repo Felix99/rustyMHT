@@ -1,14 +1,14 @@
-use numeric::Tensor;
+use rm::linalg::matrix::Matrix;
 use tracking_sim::Linalg;
 
 pub struct Hypothesis {
-    pub state : Tensor<f64>,
-    pub covar : Tensor<f64>,
+    pub state : Matrix<f64>,
+    pub covar : Matrix<f64>,
     pub weight : f64,
 }
 
 impl Hypothesis {
-    pub fn new(state : &Tensor<f64>, covar: &Tensor<f64>, weight : f64) -> Hypothesis {
+    pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, weight : f64) -> Hypothesis {
         let la = Linalg::new();
         Hypothesis {
             state : la.copy(state),

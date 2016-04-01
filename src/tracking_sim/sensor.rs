@@ -1,6 +1,5 @@
-#[macro_use(tensor)]
-use numeric::random::RandomState;
-use numeric::Tensor;
+use rm::linalg::matrix::Matrix;
+
 use tracking_sim::Linalg;
 use tracking_sim::Target;
 use tracking_sim::Config;
@@ -37,8 +36,8 @@ impl Sensor {
     fn target_measurement(&mut self, target: &Target) -> Vec<Measurement> {
         let mut res = Vec::new();
         if self.target_detection() {
-            let z = self.la.mvnrnd(&(self.config.msr_matrix.dot(&target.state)), &self.config.msr_covar);
-            res.push(Measurement{data:z.reshape(&[2,1])})
+            let z = self.la.mvnrnd(&(&self.config.msr_matrix * &target.state), &self.config.msr_covar);
+            res.push(Measurement{data:z})
         }
         res
     }

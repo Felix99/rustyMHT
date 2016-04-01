@@ -1,6 +1,5 @@
-#[macro_use(tensor)]
-
-extern crate numeric;
+extern crate rusty_machine as rm;
+extern crate rand;
 
 mod simulation;
 mod tracking_sim;

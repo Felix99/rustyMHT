@@ -1,50 +1,48 @@
-#[macro_use(tensor)]
 use filter::tracking_sim::Target;
 use filter::tracking_sim::Sensor;
 use filter::tracking_sim::Config;
-use numeric::Tensor;
+use rm::linalg::matrix::Matrix;
 
 
 #[test]
 fn measure_target_position() {
     let mut config = Config::new();
-    let initState = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]);
+    let initState = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let target = Target::new(initState,2.5,0.0);
-    let msr_covar = Tensor::<f64>::eye(2);
+    let msr_covar = Matrix::<f64>::identity(2);
     config.msr_covar = msr_covar;
     config.p_D = 1.0;
     config.rho_F = 0.0;
     let mut sensor = Sensor::new(config);
-    let msr_covar = Tensor::<f64>::eye(2);
+    let msr_covar = Matrix::<f64>::identity(2);
 
     let n = 10000;
-    let scale_matrix = Tensor::<f64>::new(vec![1_f64/ n as f64, 0.0, 0.0, 1_f64 / n as f64]).reshape(&[2,2]);
     let mut samples = Vec::new();
     for _ in 0..n {
         let z = sensor.measure(&target);
         samples.push(z);
     }
 
-    let mut mean_samples = Tensor::<f64>::zeros(&[2,1]);
-    let mut covar_samples = Tensor::<f64>::zeros(&[2,2]);
+    let mut mean_samples = Matrix::<f64>::zeros(2,1);
+    let mut covar_samples = Matrix::<f64>::zeros(2,2);
 
     for i in 0..n {
     mean_samples = &mean_samples + &samples[i].first().unwrap().data;
     }
-    mean_samples = scale_matrix.dot(&mean_samples);
+    mean_samples = mean_samples * (1_f64 / n as f64);
 
     for i in 0..n {
     let sample_vec = &samples[i].first().unwrap().data - &mean_samples;
-    let spread_term = sample_vec.dot(&sample_vec.transpose());
-    covar_samples = covar_samples + spread_term.dot(&scale_matrix);
+    let spread_term = &sample_vec * &sample_vec.transpose();
+    covar_samples = covar_samples + spread_term * (1_f64 / n as f64);
     }
 
-    let result_mean = mean_samples - Tensor::<f64>::new(vec![10.0, 10.0]).reshape(&[2,1]);
+    let result_mean = mean_samples - Matrix::<f64>::new(2,1,vec![10.0, 10.0]);
     let result_covar = covar_samples - &msr_covar;
-    for i in result_mean.slice() {
+    for i in result_mean.data() {
     assert!(i.abs() < 0.5);
     }
-    for i in result_covar.slice() {
+    for i in result_covar.data() {
     assert!(i.abs() < 0.5);
     }
 }
@@ -60,7 +58,7 @@ fn false_measurements_a() {
     let fov_size = x_size * y_size;
     let lambda = &fov_size * &config.rho_F; // lambda = 450
     let mut sensor = Sensor::new(config);
-    let initState = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]);
+    let initState = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let target = Target::new(initState,2.5,0.0);
     let n = 250;
 

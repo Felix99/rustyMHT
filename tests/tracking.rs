@@ -5,7 +5,7 @@ use filter::tracking_sim::Config;
 use filter::tracking_sim::Track;
 use filter::tracking_sim::Hypothesis;
 use filter::tracking_sim::Measurement;
-use numeric::Tensor;
+use rm::linalg::matrix::Matrix;
 use std::f64;
 
 
@@ -13,17 +13,20 @@ use std::f64;
 fn Kalman_prediction() {
     let config = Config::new();
     let mut filter = Filter::new();
-    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let mut track = Track::new(&init_state,&config.init_covar,1.0);
     filter.predict(&mut track);
-    let final_state = Tensor::<f64>::new(vec![12.0, 13.0, 2.0, 3.0]).reshape(&[4,1]);
-    let final_covar = Tensor::<f64>::new(vec![200.3, 0.0, 100.5, 0.0,
+    let final_state = Matrix::<f64>::new(4,1,vec![12.0, 13.0, 2.0, 3.0]);
+    let final_covar = Matrix::<f64>::new(4,4,vec![200.3, 0.0, 100.5, 0.0,
         0.0, 200.3, 0.0, 100.5,
         100.5, 0.0, 101.0, 0.0,
-        0.0, 100.5, 0.0, 101.0]).reshape(&[4,4]);
-    assert!(&track.state == &final_state);
+        0.0, 100.5, 0.0, 101.0]);
+    let res = &track.state - &final_state;
+    for i in res.data() {
+        assert!(i.abs() < 1e-3);
+    }
     let diff_covar = &final_covar - &track.covar;
-    for i in diff_covar.slice() {
+    for i in diff_covar.data() {
         assert!(i < &0.01);
     }
 }
@@ -35,36 +38,36 @@ fn Kalman_filtering() {
     config.rho_F = 0.0;
     let mut filter = Filter::new();
     filter.set_config(config);
-    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
 
-//    let msr = Measurement {data : Tensor::<f64>::new(vec![8.0, 13.0]).reshape(&[2,1])};
+//    let msr = Measurement {data : Matrix::<f64>::new(vec![8.0, 13.0]).reshape(&[2,1])};
     let msr = Measurement::new(vec![8.0, 13.0]);
     filter.update(&mut track, &msr);
 
-    let final_state = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
-    let final_covar = Tensor::<f64>::new(vec![
+    let final_state = Matrix::<f64>::new(4,1,vec![8.0396, 12.9415, 2.0189, 3.0189]);
+    let final_covar = Matrix::<f64>::new(4,4,vec![
     0.9808,    0.0004,    0.0189,    0.0189,
     0.0004,    0.9808,    0.0189,    0.0189,
     0.0189,    0.0189,   50.9623,    0.9623,
-    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+    0.0189,    0.0189,    0.9623,   50.9623]);
     let diff_state = &final_state - &track.state;
-    for i in diff_state.slice() {
+    for i in diff_state.data() {
         assert!(i.abs() < 1e-3);
     }
     let diff_covar = &final_covar - &track.covar;
-    for i in diff_covar.slice() {
+    for i in diff_covar.data() {
         assert!(i.abs() < 1e-3);
     }
 }
 
 #[test]
 fn Hypotheses_merged() {
-    let init_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_state2 = Tensor::<f64>::new(vec![20.0, 25.0, -1.0, 2.0]).reshape(&[4,1]);
-    let init_covar1 = Tensor::<f64>::eye(4) * 100.0;
-    let init_covar2 = Tensor::<f64>::eye(4) * 75.0;
+    let init_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_state2 = Matrix::<f64>::new(4,1,vec![20.0, 25.0, -1.0, 2.0]);
+    let init_covar1 = Matrix::<f64>::identity(4) * 100.0;
+    let init_covar2 = Matrix::<f64>::identity(4) * 75.0;
     let weight1 = 0.4;
     let weight2 = 0.6;
     let mut track = Track::new(&init_state1,&init_covar1,1.0);
@@ -73,21 +76,21 @@ fn Hypotheses_merged() {
 
     track.update_state();
 
-    let final_state = Tensor::<f64>::new(vec![16.0, 19.0, 0.2, 2.4]).reshape(&[4,1]);
-    let final_covar = Tensor::<f64>::new(vec![
+    let final_state = Matrix::<f64>::new(4,1,vec![16.0, 19.0, 0.2, 2.4]);
+    let final_covar = Matrix::<f64>::new(4,4,vec![
     109.0000,   36.0000,   -7.2000,   -2.4000,
     36.0000,  139.0000,  -10.8000,   -3.6000,
     -7.2000,  -10.8000,   87.1600,    0.7200,
-    -2.4000,   -3.6000,    0.7200,   85.2400]).reshape(&[4,4]);
+    -2.4000,   -3.6000,    0.7200,   85.2400]);
 
     // compare state
     let diff_state = &final_state - &track.state;
-    for i in diff_state.slice() {
+    for i in diff_state.data() {
         assert!(i < &0.01);
     }
     // compare covar
     let diff_covar = &final_covar - &track.covar;
-    for i in diff_covar.slice() {
+    for i in diff_covar.data() {
         assert!(i < &0.01);
     }
 }
@@ -99,8 +102,8 @@ fn multi_hypotheses_update() {
     config.rho_F = 1e-5;
     let mut filter = Filter::new();
     filter.set_config(config);
-    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
 
     let msr1 = Measurement::new(vec![8.0, 13.0]);
@@ -109,17 +112,17 @@ fn multi_hypotheses_update() {
     let msrs = vec![msr1,msr2,msr3];
     filter.update_mht(&mut track, &msrs);
 
-    let final_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let final_state2 = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
-    let final_state3 = Tensor::<f64>::new(vec![17.8461,10.0030, 2.1509, 3.1509]).reshape(&[4,1]);
-    let final_state4 = Tensor::<f64>::new(vec![5.0980, 14.9020, 2.0000, 3.0000]).reshape(&[4,1]);
+    let final_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let final_state2 = Matrix::<f64>::new(4,1,vec![8.0396, 12.9415, 2.0189, 3.0189]);
+    let final_state3 = Matrix::<f64>::new(4,1,vec![17.8461,10.0030, 2.1509, 3.1509]);
+    let final_state4 = Matrix::<f64>::new(4,1,vec![5.0980, 14.9020, 2.0000, 3.0000]);
     let final_states = vec![final_state1,final_state2,final_state3,final_state4];
     let final_weights = vec![0.000008, 0.433033, 0.265726, 0.301233];
-    let final_covar = Tensor::<f64>::new(vec![
+    let final_covar = Matrix::<f64>::new(4,4,vec![
     0.9808,    0.0004,    0.0189,    0.0189,
     0.0004,    0.9808,    0.0189,    0.0189,
     0.0189,    0.0189,   50.9623,    0.9623,
-    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+    0.0189,    0.0189,    0.9623,   50.9623]);
     let final_covars = vec![init_covar,final_covar];
 
     assert!(&track.hypotheses.len() == &4);
@@ -129,7 +132,7 @@ fn multi_hypotheses_update() {
         for state in final_states.iter() {
             let dist_i = state - &h.state;
 
-            let d_i = dist_i.transpose().dot(&dist_i).slice()[0].sqrt();
+            let d_i = (dist_i.transpose() * &dist_i)[[0,0]];
             if d_i < dist {
                 dist = d_i;
             }
@@ -154,7 +157,7 @@ fn multi_hypotheses_update() {
         let mut dist = f64::INFINITY;
         for covar in final_covars.iter() {
             let diff = covar - &h.covar;
-            let d_i = diff.slice().iter().fold(0_f64, |a,e| a+e);
+            let d_i = diff.data().iter().fold(0.0, |a,e| a + e.powf(2.0));
             if d_i < dist {
                 dist = d_i;
             }
@@ -193,10 +196,10 @@ fn multi_hypotheses_update() {
 
 #[test]
 fn normalize_weights() {
-    let init_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_state2 = Tensor::<f64>::new(vec![20.0, 25.0, -1.0, 2.0]).reshape(&[4,1]);
-    let init_covar1 = Tensor::<f64>::eye(4) * 100.0;
-    let init_covar2 = Tensor::<f64>::eye(4) * 75.0;
+    let init_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_state2 = Matrix::<f64>::new(4,1,vec![20.0, 25.0, -1.0, 2.0]);
+    let init_covar1 = Matrix::<f64>::identity(4) * 100.0;
+    let init_covar2 = Matrix::<f64>::identity(4) * 75.0;
     let weight1 = 3.4;
     let weight2 = 2.6;
     let mut track = Track::new(&init_state1,&init_covar1,1.0);
@@ -218,8 +221,8 @@ fn gating() {
     config.rho_F = 1e-5;
     let mut filter = Filter::new();
     filter.set_config(config);
-    let init_state = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_covar = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
 
     let msr1 = Measurement::new(vec![8.0, 13.0]);
@@ -240,17 +243,17 @@ fn hypothesis_merging() {
     config.rho_F = 1e-5;
     let mut filter = Filter::new();
     filter.set_config(config);
-    let init_covar1 = Tensor::<f64>::ones(&[4,4]) + Tensor::<f64>::eye(4) * 50.0;
-    let init_covar2 = Tensor::<f64>::new(vec![
+    let init_covar1 = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
+    let init_covar2 = Matrix::<f64>::new(4,4,vec![
     0.9808,    0.0004,    0.0189,    0.0189,
     0.0004,    0.9808,    0.0189,    0.0189,
     0.0189,    0.0189,   50.9623,    0.9623,
-    0.0189,    0.0189,    0.9623,   50.9623]).reshape(&[4,4]);
+    0.0189,    0.0189,    0.9623,   50.9623]);
 
-    let init_state1 = Tensor::<f64>::new(vec![10.0, 10.0, 2.0, 3.0]).reshape(&[4,1]);
-    let init_state2 = Tensor::<f64>::new(vec![8.0396, 12.9415, 2.0189, 3.0189]).reshape(&[4,1]);
-    let init_state3 = Tensor::<f64>::new(vec![17.8461,10.0030, 2.1509, 3.1509]).reshape(&[4,1]);
-    let init_state4 = Tensor::<f64>::new(vec![5.0980, 14.9020, 2.0000, 3.0000]).reshape(&[4,1]);
+    let init_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_state2 = Matrix::<f64>::new(4,1,vec![8.0396, 12.9415, 2.0189, 3.0189]);
+    let init_state3 = Matrix::<f64>::new(4,1,vec![17.8461,10.0030, 2.1509, 3.1509]);
+    let init_state4 = Matrix::<f64>::new(4,1,vec![5.0980, 14.9020, 2.0000, 3.0000]);
     let weights = vec![0.000008, 0.433033, 0.265726, 0.301233];
 
     let h1 = Hypothesis::new(&init_state1,&init_covar1,weights[0]);

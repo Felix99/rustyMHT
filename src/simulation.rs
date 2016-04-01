@@ -1,6 +1,4 @@
-use numeric::random::RandomState;
-use numeric::Tensor;
-
+extern crate rusty_machine as rm;
 
 use tracking_sim::Target;
 use tracking_sim::Dynamics;

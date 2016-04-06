@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate rusty_machine as rm;
 extern crate rand;
 

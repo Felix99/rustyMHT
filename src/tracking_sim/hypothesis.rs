@@ -9,7 +9,6 @@ pub struct Hypothesis {
 
 impl Hypothesis {
     pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, weight : f64) -> Hypothesis {
-        let la = Linalg::new();
         Hypothesis {
             state : state.clone(),
             covar : covar.clone(),

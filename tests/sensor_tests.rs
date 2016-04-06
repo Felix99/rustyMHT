@@ -7,8 +7,8 @@ use rm::linalg::matrix::Matrix;
 #[test]
 fn measure_target_position() {
     let mut config = Config::new();
-    let initState = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
-    let target = Target::new(initState,2.5,0.0);
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let target = Target::new(init_state,2.5,0.0);
     let msr_covar = Matrix::<f64>::identity(2);
     config.msr_covar = msr_covar;
     config.p_D = 1.0;
@@ -58,14 +58,14 @@ fn false_measurements_a() {
     let fov_size = x_size * y_size;
     let lambda = &fov_size * &config.rho_F; // lambda = 450
     let mut sensor = Sensor::new(config);
-    let initState = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
-    let target = Target::new(initState,2.5,0.0);
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let target = Target::new(init_state,2.5,0.0);
     let n = 250;
 
     // stats
     let mut num_msrs = Vec::new();
 
-    for i in 0..n {
+    for _ in 0..n {
         let msrs = sensor.measure(&target);
         num_msrs.push(msrs.len() as u64);
     }

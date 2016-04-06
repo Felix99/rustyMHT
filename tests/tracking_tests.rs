@@ -1,5 +1,3 @@
-use filter::tracking_sim::Target;
-use filter::tracking_sim::Sensor;
 use filter::tracking_sim::Filter;
 use filter::tracking_sim::Config;
 use filter::tracking_sim::Track;
@@ -10,9 +8,9 @@ use std::f64;
 
 
 #[test]
-fn Kalman_prediction() {
+fn kalman_prediction() {
     let config = Config::new();
-    let mut filter = Filter::new(config.clone());
+    let filter = Filter::new(config.clone());
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let mut track = Track::new(&init_state,&config.init_covar,1.0);
     filter.predict(&mut track);
@@ -32,11 +30,11 @@ fn Kalman_prediction() {
 }
 
 #[test]
-fn Kalman_filtering() {
+fn kalman_filtering() {
     let mut config = Config::new();
     config.p_D = 1.0;
     config.rho_F = 0.0;
-    let mut filter = Filter::new(config);
+    let filter = Filter::new(config);
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
@@ -62,7 +60,7 @@ fn Kalman_filtering() {
 }
 
 #[test]
-fn Hypotheses_merged() {
+fn hypotheses_merged() {
     let init_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_state2 = Matrix::<f64>::new(4,1,vec![20.0, 25.0, -1.0, 2.0]);
     let init_covar1 = Matrix::<f64>::identity(4) * 100.0;
@@ -99,7 +97,7 @@ fn multi_hypotheses_update() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new(config);
+    let filter = Filter::new(config);
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
@@ -217,18 +215,18 @@ fn gating() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new(config);
+    let filter = Filter::new(config);
 
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
-    let mut track = Track::new(&init_state,&init_covar,1.0);
+    let track = Track::new(&init_state,&init_covar,1.0);
 
     let msr1 = Measurement::new(vec![8.0, 13.0]);
     let msr2 = Measurement::new(vec![18.0, 10.0]);
     let msr3 = Measurement::new(vec![5.0, 15.0]);
     let msr4 = Measurement::new(vec![25.0, -15.0]);
     let msr5 = Measurement::new(vec![-5.0, 35.0]);
-    let msrs = vec![msr1,msr2,msr3];
+    let msrs = vec![msr1,msr2,msr3,msr4,msr5];
     let gated = filter.gate(&track, &msrs);
 
     assert!(gated.len() == 3);
@@ -239,7 +237,6 @@ fn hypothesis_merging() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new(config);
 
     let init_covar1 = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let init_covar2 = Matrix::<f64>::new(4,4,vec![

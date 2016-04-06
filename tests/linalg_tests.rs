@@ -4,18 +4,16 @@ use rm::linalg::matrix::Matrix;
 
 #[test]
 fn cholesky_decomposition() {
-	let T = 2.0_f64;
+	let t = 2.0_f64;
 
-	let Q = Matrix::<f64>::new(4,4, vec![
-            0.3 * T.powf(3.0), 0.0, 0.5 * T.powf(2.0), 0.0,
-			0.0, 0.3 * T.powf(3.0), 0.0, 0.5 * T.powf(2.0),
-			0.5 * T.powf(2.0), 0.0, T, 0.0,
-			0.0, 0.5 * T.powf(2.0), 0.0, T]);
+	let q_matrix = Matrix::<f64>::new(4,4, vec![
+            0.3 * t.powf(3.0), 0.0, 0.5 * t.powf(2.0), 0.0,
+			0.0, 0.3 * t.powf(3.0), 0.0, 0.5 * t.powf(2.0),
+			0.5 * t.powf(2.0), 0.0, t, 0.0,
+			0.0, 0.5 * t.powf(2.0), 0.0, t]);
 	
-	let la = Linalg::new();	
-
-	let G = Q.cholesky();
-	let result = &G * G.transpose() - Q;
+	let g = q_matrix.cholesky();
+	let result = &g * g.transpose() - q_matrix;
 	for i in result.data() {
 		assert!(i.abs() < 0.01);
 	} 
@@ -26,23 +24,23 @@ fn mvnrnd_draw_multivariate_numbers() {
 	let mean = Matrix::<f64>::new(2,1,vec![2.0, 3.0]);
 	let covar = Matrix::<f64>::new(2,2,vec![10.0, 4.0, 4.0, 7.0]);
 	let mut la = Linalg::new();
-	let N = 10000;
+	let n = 10000;
 	let mut mean_samples = Matrix::<f64>::zeros(2,1);
 	let mut covar_samples = Matrix::<f64>::zeros(2,2);
 	let mut samples = Vec::new();
-	for i in 0..N {
+	for _ in 0..n {
 		samples.push(la.mvnrnd(&mean,&covar));
 	}
 
-	for i in 0..N {
+	for i in 0..n {
 		mean_samples = mean_samples + &samples[i];		
 	}
-	mean_samples = mean_samples * (1_f64 / N as f64);
+	mean_samples = mean_samples * (1_f64 / n as f64);
 	
-	for i in 0..N {		
+	for i in 0..n {
 		let sample_vec = &samples[i] - &mean_samples;
 		let spread_term = &sample_vec * &sample_vec.transpose();
-		covar_samples = covar_samples + spread_term * (1_f64 / N as f64);
+		covar_samples = covar_samples + spread_term * (1_f64 / n as f64);
 	}
 	
 	let result_mean = mean_samples - &mean;
@@ -58,10 +56,9 @@ fn mvnrnd_draw_multivariate_numbers() {
 
 #[test]
 pub fn inv() {
-	let la = Linalg::new();
-	let A = Matrix::<f64>::new(2,2,vec![10.0, 5.0, -3.0, 7.0]);
-	let B = A.inverse();
-	let result = Matrix::<f64>::identity(2) - &A * &B;
+	let a = Matrix::<f64>::new(2,2,vec![10.0, 5.0, -3.0, 7.0]);
+	let b = a.inverse();
+	let result = Matrix::<f64>::identity(2) - &a * &b;
 	for i in result.data() {
 		assert!(i.abs() < 0.01);
 	}

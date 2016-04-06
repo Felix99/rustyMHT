@@ -1,11 +1,7 @@
-use rm::linalg::matrix::Matrix;
 use tracking_sim::Linalg;
-use tracking_sim::Sensor;
-use tracking_sim::Dynamics;
 use tracking_sim::Config;
 use tracking_sim::Track;
 use tracking_sim::Measurement;
-use tracking_sim::Hypothesis;
 use tracking_sim::Filter;
 
 
@@ -45,7 +41,7 @@ impl Manager {
 
         // generate new tracks
         {
-            for z in msrs.iter() {
+            for z in non_assoc.iter() {
                 let t = self.generate_new_track(z);
                 self.tracks.push(t);
             }

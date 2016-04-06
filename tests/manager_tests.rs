@@ -12,9 +12,8 @@ use rm::linalg::matrix::Matrix;
 #[test]
 fn process_single_measurement() {
     let mut config = Config::new();
-    let initState = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
-    let target = Target::new(initState,2.5,0.0);
-    let msr_covar = Matrix::<f64>::identity(2);
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let target = Target::new(init_state,2.5,0.0);
     config.p_D = 1.0;
     config.rho_F = 0.0;
     let mut sensor = Sensor::new(config.clone());
@@ -36,8 +35,6 @@ fn measurement_association() {
     let track1 = Track::new(&init_state1,&init_covar,1.0);
     let track2 = Track::new(&init_state2,&init_covar,1.0);
     let track3 = Track::new(&init_state3,&init_covar,1.0);
-
-    let msr_covar = Matrix::<f64>::identity(2);
     config.p_D = 1.0;
     config.rho_F = 0.0;
     let mut manager = Manager::new(config.clone());
@@ -67,8 +64,6 @@ fn measurement_non_association() {
     let track1 = Track::new(&init_state1,&init_covar,1.0);
     let track2 = Track::new(&init_state2,&init_covar,1.0);
     let track3 = Track::new(&init_state3,&init_covar,1.0);
-
-    let msr_covar = Matrix::<f64>::identity(2);
     config.p_D = 1.0;
     config.rho_F = 0.0;
     let mut manager = Manager::new(config.clone());
@@ -82,10 +77,6 @@ fn measurement_non_association() {
     let msrs = vec![msr1,msr2,msr3,msr4];
 
     let a = manager.get_non_assoc(&msrs);
-    println!("len: {}",a.len());
-    for i in a.iter() {
-        println!("{}",i.data);
-    }
     assert!(a.len() == 1);
 
 }

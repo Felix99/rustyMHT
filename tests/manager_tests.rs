@@ -55,3 +55,37 @@ fn measurement_association() {
         assert!(i.len() == 1);
     }
 }
+
+
+#[test]
+fn measurement_non_association() {
+    let mut config = Config::new();
+    let init_state1 = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_state2 = Matrix::<f64>::new(4,1,vec![-10.0, -10.0, 2.0, 3.0]);
+    let init_state3 = Matrix::<f64>::new(4,1,vec![-50.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::identity(4) * 5.0;
+    let track1 = Track::new(&init_state1,&init_covar,1.0);
+    let track2 = Track::new(&init_state2,&init_covar,1.0);
+    let track3 = Track::new(&init_state3,&init_covar,1.0);
+
+    let msr_covar = Matrix::<f64>::identity(2);
+    config.p_D = 1.0;
+    config.rho_F = 0.0;
+    let mut manager = Manager::new(config.clone());
+    manager.tracks = vec![track1,track2,track3];
+
+    //test msr
+    let msr1 = Measurement::new(vec![11.0,11.0]);
+    let msr2 = Measurement::new(vec![-11.0,-11.0]);
+    let msr3 = Measurement::new(vec![-48.0,12.0]);
+    let msr4 = Measurement::new(vec![423218.0,312312312.0]);
+    let msrs = vec![msr1,msr2,msr3,msr4];
+
+    let a = manager.get_non_assoc(&msrs);
+    println!("len: {}",a.len());
+    for i in a.iter() {
+        println!("{}",i.data);
+    }
+    assert!(a.len() == 1);
+
+}

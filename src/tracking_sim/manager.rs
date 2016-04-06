@@ -43,9 +43,6 @@ impl Manager {
             self.filter.update_mht(t,&assoc[i]);
         }
 
-
-
-
         // generate new tracks
         {
             for z in msrs.iter() {
@@ -67,15 +64,15 @@ impl Manager {
     pub fn get_non_assoc(&self, msrs: &Vec<Measurement>) -> Vec<Measurement> {
         let mut non_assoc = Vec::<Measurement>::new();
         for z in msrs {
-            let mut associated = true;
+            let mut not_associated = true;
             for t in &self.tracks {
                 let gate = self.filter.gate(&t,&vec![z.clone()]);
-                if gate.is_empty() {
-                    associated = false;
+                if !gate.is_empty() {
+                    not_associated = false;
                     break;
                 }
             }
-            if associated {
+            if not_associated {
                 non_assoc.push(z.clone());
             }
         }

@@ -12,7 +12,7 @@ use std::f64;
 #[test]
 fn Kalman_prediction() {
     let config = Config::new();
-    let mut filter = Filter::new();
+    let mut filter = Filter::new(config.clone());
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let mut track = Track::new(&init_state,&config.init_covar,1.0);
     filter.predict(&mut track);
@@ -36,8 +36,7 @@ fn Kalman_filtering() {
     let mut config = Config::new();
     config.p_D = 1.0;
     config.rho_F = 0.0;
-    let mut filter = Filter::new();
-    filter.set_config(config);
+    let mut filter = Filter::new(config);
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
@@ -100,8 +99,7 @@ fn multi_hypotheses_update() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new();
-    filter.set_config(config);
+    let mut filter = Filter::new(config);
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
@@ -219,8 +217,8 @@ fn gating() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new();
-    filter.set_config(config);
+    let mut filter = Filter::new(config);
+
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
     let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let mut track = Track::new(&init_state,&init_covar,1.0);
@@ -241,8 +239,8 @@ fn hypothesis_merging() {
     let mut config = Config::new();
     config.p_D = 0.9;
     config.rho_F = 1e-5;
-    let mut filter = Filter::new();
-    filter.set_config(config);
+    let mut filter = Filter::new(config);
+
     let init_covar1 = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
     let init_covar2 = Matrix::<f64>::new(4,4,vec![
     0.9808,    0.0004,    0.0189,    0.0189,

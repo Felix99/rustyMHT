@@ -27,3 +27,19 @@ impl Config {
         }
     }
 }
+
+impl Clone for Config {
+    fn clone(&self) -> Config {
+        Config {
+            msr_covar : self.msr_covar.clone(),
+            msr_matrix : self.msr_matrix.clone(),
+            q : self.q,
+            delta_t : self.delta_t,
+            init_covar :  self.init_covar.clone(),
+            p_D : self.p_D,
+            rho_F : self.rho_F,
+            mu_gating : self.mu_gating,
+            fov : self.fov,
+        }
+    }
+}

@@ -17,11 +17,10 @@ pub struct Filter {
 }
 
 impl Filter {
-    pub fn new() -> Filter {
-        let config = Config::new();
+    pub fn new(config: Config) -> Filter {
         let la = Linalg::new();
         Filter {
-            config : Config::new(),
+            config : config.clone(),
             msr_covar : config.msr_covar.clone(),
             msr_matrix : config.msr_matrix.clone(),
             la : Linalg::new(),
@@ -37,11 +36,10 @@ impl Filter {
     }
 
     pub fn predict(&self, track: &mut Track) {
-        unsafe {
-            for h in track.hypotheses.as_mut_slice() {
-                h.state = &self.dynamics.F * &h.state;
-                h.covar = &self.dynamics.F * &h.covar * &self.dynamics.F.transpose() + &self.dynamics.Q;
-            }
+        for i in 0..track.hypotheses.len() {
+            let mut h = &mut track.hypotheses[i];
+            h.state = &self.dynamics.F * &h.state;
+            h.covar = &self.dynamics.F * &h.covar * &self.dynamics.F.transpose() + &self.dynamics.Q;
         }
         track.update_state()
     }

@@ -1,5 +1,3 @@
-use rm::linalg::matrix::Matrix;
-
 use tracking_sim::Linalg;
 use tracking_sim::Target;
 use tracking_sim::Config;

@@ -95,7 +95,7 @@ fn hypotheses_merged() {
 #[test]
 fn multi_hypotheses_update() {
     let mut config = Config::new();
-    config.p_D = 0.9;
+    config.p_D = 0.95;
     config.rho_F = 1e-5;
     let filter = Filter::new(config);
     let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);

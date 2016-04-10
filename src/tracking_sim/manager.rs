@@ -1,4 +1,3 @@
-use tracking_sim::Linalg;
 use tracking_sim::Config;
 use tracking_sim::Track;
 use tracking_sim::Measurement;

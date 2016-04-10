@@ -13,8 +13,11 @@ pub fn run_sim() {
             p_D : 0.95,
             rho_F : 1e-6,
             mu_gating : 9.21,
-            fov : None,
+            fov : Some(((0.0,0.0),(1e3,1e3))),
+            threshold_lr_upper : 1e3,
+            threshold_lr_lower : 1e-3,
         };
+
 
 
 }

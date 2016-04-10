@@ -9,11 +9,11 @@ pub struct Target {
 }
 
 impl Target {
-	pub fn new(state: Matrix<f64>, deltaT: f64, q: f64) -> Target {
+	pub fn new(state: Matrix<f64>, delta_t: f64, q: f64) -> Target {
 		Target {
 			state: state,
 			la : Linalg::new(),
-			dynamics : Dynamics::new(deltaT,q)
+			dynamics : Dynamics::new(delta_t,q)
 		}
 	}
 

@@ -1,5 +1,4 @@
 use rm::linalg::matrix::Matrix;
-use tracking_sim::Linalg;
 
 pub struct Hypothesis {
     pub state : Matrix<f64>,

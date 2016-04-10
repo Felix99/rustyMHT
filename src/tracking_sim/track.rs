@@ -1,6 +1,5 @@
 use rm::linalg::matrix::Matrix;
 
-use tracking_sim::Linalg;
 use tracking_sim::Hypothesis;
 
 pub struct Track {
@@ -9,17 +8,20 @@ pub struct Track {
     pub time : f64,
     pub hypotheses : Vec<Hypothesis>,
     dim : usize,
+    pub id : i64,
+    pub lr : f64,
 }
 
 impl Track {
     pub fn new(state : &Matrix<f64>, covar: &Matrix<f64>, time : f64) -> Track {
-        let la = Linalg::new();
         Track {
             state : state.clone(),
             covar : covar.clone(),
             time : time,
             hypotheses : vec![Hypothesis::new(state,covar,1.0)],
             dim : state.rows(),
+            id : -1,
+            lr : 1_f64,
         }
     }
 
@@ -41,11 +43,11 @@ impl Track {
 
     pub fn normalize_weights(&mut self) {
         let sum = self.hypotheses.iter().fold(0_f64, |a,e| a + e.weight);
-        unsafe {
-            for h in self.hypotheses.as_mut_slice() {
+
+        for h in self.hypotheses.as_mut_slice() {
                 h.weight = h.weight / sum;
-            }
         }
+
     }
 
     pub fn merge_hypotheses(&mut self) {
@@ -58,8 +60,8 @@ impl Track {
     fn merge_local(&self, list_of_hypos: Vec<Hypothesis>, mut merged_hypos: Vec<Hypothesis>) -> Vec<Hypothesis> {
         if list_of_hypos.len() > 1 {
             let separated = self.find_elements_to_merge_with_tail(list_of_hypos);
-            let mut to_merge = separated.0;
-            let mut not_to_merge = separated.1;
+            let to_merge = separated.0;
+            let not_to_merge = separated.1;
             merged_hypos.push(self.merge_all(to_merge));
             self.merge_local(not_to_merge,merged_hypos)
         } else {
@@ -111,6 +113,8 @@ impl Clone for Track {
             time : self.time,
             hypotheses : self.hypotheses.clone(),
             dim : self.dim,
+            lr : self.lr,
+            id : self.id,
         }
     }
 }

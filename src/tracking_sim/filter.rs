@@ -1,7 +1,5 @@
-#[macro_use(Matrix)]
 use rm::linalg::matrix::Matrix;
 use tracking_sim::Linalg;
-use tracking_sim::Sensor;
 use tracking_sim::Dynamics;
 use tracking_sim::Config;
 use tracking_sim::Track;
@@ -18,7 +16,6 @@ pub struct Filter {
 
 impl Filter {
     pub fn new(config: Config) -> Filter {
-        let la = Linalg::new();
         Filter {
             config : config.clone(),
             msr_covar : config.msr_covar.clone(),
@@ -47,17 +44,17 @@ impl Filter {
     pub fn update(&self, track: &mut Track, msr: &Measurement) {
         assert!(msr.data.rows() == self.msr_matrix.rows());
         assert!(track.state.rows() == self.msr_matrix.cols());
+        //
         if track.hypotheses.is_empty() {
             let mut h = Hypothesis::new(&track.state,&track.covar,1.0);
             self.update_hypothesis(&mut h, msr);
             track.hypotheses = vec![h];
             track.update_state();
         } else {
-            unsafe {
-                for h in track.hypotheses.as_mut_slice() {
+            for h in track.hypotheses.as_mut_slice() {
                     self.update_hypothesis(h, msr);
-                }
             }
+
             track.update_state();
         }
 
@@ -86,24 +83,28 @@ impl Filter {
         let mut new_hypos = Vec::new();
         let msrs_gated = self.gate(track,msr);
         for h in &track.hypotheses {
-            new_hypos.extend(self.create_hypotheses(&h,&msrs_gated));
+            let (new_hypos_for_h,delta) = self.create_hypotheses(&h,&msrs_gated);
+            track.lr *= delta;
+            new_hypos.extend(new_hypos_for_h);
         }
         track.hypotheses = new_hypos;
         track.update_state();
     }
-
-    pub fn create_hypotheses(&self, hypo: &Hypothesis, msrs: &Vec<Measurement>) -> Vec<Hypothesis> {
+    // returns: new hypotheses together with lr delta
+    pub fn create_hypotheses(&self, hypo: &Hypothesis, msrs: &Vec<Measurement>) -> (Vec<Hypothesis>,f64) {
         let state = &hypo.state;
         let covar = &hypo.covar;
         let p_0 = (1_f64-self.config.p_D) * hypo.weight;
+        let mut delta = p_0;
         let h0 = Hypothesis::new(&state, &covar, p_0);
         let mut hypos = vec![h0];
         for z in msrs.iter() {
             let mut h_i = Hypothesis::new(&state, &covar, hypo.weight);
             self.update_hypothesis(&mut h_i,z);
+            delta += h_i.weight;
             hypos.push(h_i);
         }
-        hypos
+        (hypos,delta)
     }
 
     pub fn gate(&self, track: &Track, msrs: &Vec<Measurement>) -> Vec<Measurement> {

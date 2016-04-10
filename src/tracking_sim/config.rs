@@ -10,6 +10,8 @@ pub struct Config {
     pub rho_F : f64,
     pub mu_gating : f64,
     pub fov : Option<((f64,f64),(f64,f64))>,
+    pub threshold_lr_upper : f64,
+    pub threshold_lr_lower : f64,
 }
 
 impl Config {
@@ -24,6 +26,8 @@ impl Config {
             rho_F : 1e-6,
             mu_gating : 9.21,
             fov : None,
+            threshold_lr_upper : 1e3,
+            threshold_lr_lower : 1e-3,
         }
     }
 }
@@ -40,6 +44,8 @@ impl Clone for Config {
             rho_F : self.rho_F,
             mu_gating : self.mu_gating,
             fov : self.fov,
+            threshold_lr_upper : self.threshold_lr_upper,
+            threshold_lr_lower : self.threshold_lr_lower,
         }
     }
 }

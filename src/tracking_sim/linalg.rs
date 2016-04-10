@@ -5,7 +5,6 @@ use rand;
 use std::f64::consts::PI;
 
 pub struct Linalg {
-	i : i32,
     rs : ThreadRng,
 }
 
@@ -13,14 +12,13 @@ impl Linalg {
 	
 	pub fn new() -> Linalg {
 		Linalg {
-			i : 1,
             rs : rand::thread_rng(),
 		}
 	}
 	
-	pub fn set(&self, A: &mut Matrix<f64>, i:usize, j:usize, val: f64) {
-		let dim1 = A.cols();
-		let mut data = A.mut_data();
+	pub fn set(&self, a: &mut Matrix<f64>, i:usize, j:usize, val: f64) {
+		let dim1 = a.cols();
+		let mut data = a.mut_data();
 		data[i * dim1 + j] = val;
 	}
 
@@ -41,8 +39,8 @@ impl Linalg {
 		assert!(covar.rows() == covar.cols());
 		let dim = covar.rows();
 		let stn = self.gen_std_normal_vec(dim);
-		let L = covar.cholesky();
-        let zero_mean_mvn = &L * stn;
+		let l = covar.cholesky();
+        let zero_mean_mvn = &l * stn;
         zero_mean_mvn + mean
 	}
 

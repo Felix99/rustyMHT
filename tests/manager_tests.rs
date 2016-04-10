@@ -121,3 +121,36 @@ fn likelihood_ratio() {
     lr = w0+w1+w2+w3
     */
 }
+
+#[test]
+fn track_deletion() {
+    let mut config = Config::new();
+    config.threshold_lr_upper = 1e3;
+    config.threshold_lr_lower = 1e-3;
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
+    let mut track = Track::new(&init_state,&init_covar,1.0);
+    track.lr = 1e-4;
+    track.id = 3;
+    let mut manager = Manager::new(config.clone());
+    manager.tracks = vec![track];
+    manager.prune_tracks();
+    assert!(manager.tracks.is_empty());
+}
+
+#[test]
+fn track_confirmation() {
+    let mut config = Config::new();
+    config.threshold_lr_upper = 1e3;
+    config.threshold_lr_lower = 1e-3;
+    let init_state = Matrix::<f64>::new(4,1,vec![10.0, 10.0, 2.0, 3.0]);
+    let init_covar = Matrix::<f64>::ones(4,4) + Matrix::<f64>::identity(4) * 50.0;
+    let mut track = Track::new(&init_state,&init_covar,1.0);
+    track.lr = 1e4;
+    track.id = -1;
+    let mut manager = Manager::new(config.clone());
+    manager.tracks = vec![track];
+    manager.confirm_tracks();
+    let track_id = manager.tracks.first().unwrap().id;
+    assert!(track_id > 0);
+}

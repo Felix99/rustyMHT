@@ -8,7 +8,7 @@ use tracking_sim::Filter;
 pub struct Manager {
     pub tracks : Vec<Track>,
     pub filter : Filter,
-    current_track_id : i64,
+    next_track_id : i64,
     pub config : Config,
     dim : usize,
     time : f64,
@@ -19,7 +19,7 @@ impl Manager {
         Manager {
             tracks : Vec::new(),
             filter : Filter::new(config.clone()),
-            current_track_id : 1,
+            next_track_id : 1,
             config : config.clone(),
             dim : config.msr_matrix.cols(),
             time : 1_f64,
@@ -72,5 +72,19 @@ impl Manager {
             }
         }
         non_assoc
+    }
+
+    pub fn prune_tracks(&mut self) {
+        self.tracks = self.tracks.iter().filter(
+            |e| e.lr > self.config.threshold_lr_lower).map(|e| e.clone()).collect::<Vec<_>>();
+    }
+
+    pub fn confirm_tracks(&mut self) {
+        for t in self.tracks.as_mut_slice() {
+            if t.id < 0 && t.lr > self.config.threshold_lr_upper {
+                t.id = self.next_track_id;
+                self.next_track_id += 1;
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 use tracking_sim::Hypothesis;
 
@@ -86,8 +86,13 @@ impl Track {
     fn hypotheses_are_close(&self, h1: &Hypothesis, h2: &Hypothesis) -> bool {
         let d = &h1.state - &h2.state;
         let metric = (&h1.covar + &h2.covar).inverse();
-        let stat_dist = &d.transpose() * metric * &d;
-        stat_dist[[0,0]]< 12.23
+        if metric.is_ok() {
+            let stat_dist = &d.transpose() * metric.unwrap() * &d;
+            stat_dist[[0,0]]< 12.23
+        } else {
+            panic!("Matrix inversion failed!")
+        }
+
     }
 
     fn merge_all(&self, to_merge: Vec<Hypothesis>) -> Hypothesis {
@@ -103,6 +108,12 @@ impl Track {
         });
         Hypothesis::new(&mean,&covar,weight)
     }
+
+    pub fn prune_hypotheses(&mut self, threshold : f64) {
+        self.hypotheses = self.hypotheses.iter().filter(
+            |e| e.weight > threshold).cloned().collect::<Vec<_>>();
+    }
+
 }
 
 impl Clone for Track {

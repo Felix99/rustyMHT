@@ -76,7 +76,7 @@ impl Manager {
 
     pub fn prune_tracks(&mut self) {
         self.tracks = self.tracks.iter().filter(
-            |e| e.lr > self.config.threshold_lr_lower).map(|e| e.clone()).collect::<Vec<_>>();
+            |e| e.lr > self.config.threshold_lr_lower).cloned().collect::<Vec<_>>();
     }
 
     pub fn confirm_tracks(&mut self) {

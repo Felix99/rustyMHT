@@ -1,4 +1,5 @@
-use rm::linalg::matrix::Matrix;
+//use rm::linalg::Matrix;
+use rm::linalg::*;
 use rand::distributions::{Normal, Range, IndependentSample};
 use rand::ThreadRng;
 use rand;
@@ -39,15 +40,26 @@ impl Linalg {
 		assert!(covar.rows() == covar.cols());
 		let dim = covar.rows();
 		let stn = self.gen_std_normal_vec(dim);
-		let l = covar.cholesky();
-        let zero_mean_mvn = &l * stn;
-        zero_mean_mvn + mean
+		let l_res = covar.cholesky();
+        if l_res.is_ok() {
+            let zero_mean_mvn = &l_res.unwrap() * &stn;
+            return zero_mean_mvn + mean
+        } else {
+            panic!("Cholesky decomposition failed!")
+        }
+
+
 	}
 
     pub fn stat_dist(&self, x: &Matrix<f64>, mean: &Matrix<f64>, covar: &Matrix<f64>) -> f64 {
         let covar_inv = covar.inverse();
-        let d = x - mean;
-        (&d.transpose() * &covar_inv * &d)[[0,0]]
+        if covar_inv.is_ok() {
+            let d = x - mean;
+            return (&d.transpose() * &covar_inv.unwrap() * &d)[[0,0]]
+        } else {
+            panic!("Matrix inversion failed!")
+        }
+
 
     }
 

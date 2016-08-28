@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 use tracking_sim::Linalg;
 use tracking_sim::Dynamics;
 

@@ -16,24 +16,28 @@ impl Sensor {
         }
     }
 
-    pub fn measure(&mut self, target: &Target) -> Vec<Measurement> {
+    pub fn measure(&mut self, targets: Vec<&Target>) -> Vec<Measurement> {
         if self.config.rho_F > 0.0 {
             let mut fa = self.false_measurements();
-            for z in self.target_measurement(target).iter() {
+            for z in self.target_measurement(targets).iter() {
                 fa.push(z.clone());
             }
             fa
         } else {
-            self.target_measurement(target)
+            self.target_measurement(targets)
         }
     }
 
-    fn target_measurement(&mut self, target: &Target) -> Vec<Measurement> {
+    fn target_measurement(&mut self, targets: Vec<&Target>) -> Vec<Measurement> {
         let mut res = Vec::new();
-        if self.target_detection() {
-            let z = self.la.mvnrnd(&(&self.config.msr_matrix * &target.state), &self.config.msr_covar);
-            res.push(Measurement{data:z})
+        for t in targets {
+            let b = self.target_detection();
+            if b {
+                let z = self.la.mvnrnd(&(&self.config.msr_matrix * &t.state), &self.config.msr_covar);
+                res.push(Measurement{data:z})
+            }
         }
+
         res
     }
 

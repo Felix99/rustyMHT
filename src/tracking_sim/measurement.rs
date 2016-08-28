@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 pub struct Measurement {
     pub data : Matrix<f64>,

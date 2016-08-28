@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 use tracking_sim::Linalg;
 use tracking_sim::Dynamics;
 use tracking_sim::Config;
@@ -68,15 +68,20 @@ impl Filter {
         let innovation_covar = &self.msr_matrix * &hypo.covar * &self.msr_matrix.transpose()
         + &self.msr_covar;
         let innovation_covar_inv = innovation_covar.inverse();
-        let kalman_gain = &hypo.covar * &self.msr_matrix.transpose() * &innovation_covar_inv;
-        hypo.state = &hypo.state + &kalman_gain * &innovation;
-        hypo.covar = &hypo.covar - &kalman_gain * &innovation_covar * &kalman_gain.transpose();
-        hypo.weight = if self.config.rho_F > 0.0 {
-            self.config.p_D / self.config.rho_F * hypo.weight *
-                self.la.normal(&innovation,&Matrix::<f64>::new(2,1,vec![0.0,0.0]), &innovation_covar)
+        if innovation_covar_inv.is_ok() {
+            let kalman_gain = &hypo.covar * &self.msr_matrix.transpose() * &innovation_covar_inv.unwrap();
+            hypo.state = &hypo.state + &kalman_gain * &innovation;
+            hypo.covar = &hypo.covar - &kalman_gain * &innovation_covar * &kalman_gain.transpose();
+            hypo.weight = if self.config.rho_F > 0.0 {
+                self.config.p_D / self.config.rho_F * hypo.weight *
+                    self.la.normal(&innovation,&Matrix::<f64>::new(2,1,vec![0.0,0.0]), &innovation_covar)
+            } else {
+                1_f64
+            };
         } else {
-            1_f64
-        };
+            panic!("Matrix inversion failed!")
+        }
+
     }
 
     pub fn update_mht(&self, track: &mut Track, msr: &Vec<Measurement>) {
@@ -110,17 +115,24 @@ impl Filter {
     pub fn gate(&self, track: &Track, msrs: &Vec<Measurement>) -> Vec<Measurement> {
         let innovation_covar = &self.msr_matrix * &track.covar * &self.msr_matrix.transpose()
         + &self.msr_covar;
-        let innovation_covar_inv = innovation_covar.inverse();
-        let z_hat = &self.msr_matrix * &track.state;
-        let mut msrs_gated = vec![];
-        for z in msrs.iter() {
-            let nu = &z.data - &z_hat;
-            let dist = (nu.transpose() * &innovation_covar_inv * &nu)[[0,0]];
-            if dist < self.config.mu_gating {
-                msrs_gated.push(z.clone());
+        let innovation_covar_inv_res = innovation_covar.inverse();
+        if innovation_covar_inv_res.is_ok() {
+            let innovation_covar_inv = innovation_covar_inv_res.unwrap();
+            let z_hat = &self.msr_matrix * &track.state;
+            let mut msrs_gated = vec![];
+            for z in msrs.iter() {
+                let nu = &z.data - &z_hat;
+                let dist = (nu.transpose() * &innovation_covar_inv * &nu)[[0,0]];
+                if dist < self.config.mu_gating {
+                    msrs_gated.push(z.clone());
+                }
             }
+            msrs_gated
+        } else {
+            panic!("Matrix inversion failed!")
         }
-        msrs_gated
+
+
     }
 
 }

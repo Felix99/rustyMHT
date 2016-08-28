@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 pub struct Config {
     pub msr_covar: Matrix<f64>,
@@ -12,6 +12,7 @@ pub struct Config {
     pub fov : Option<((f64,f64),(f64,f64))>,
     pub threshold_lr_upper : f64,
     pub threshold_lr_lower : f64,
+    pub threshold_pruning : f64,
 }
 
 impl Config {
@@ -28,6 +29,7 @@ impl Config {
             fov : None,
             threshold_lr_upper : 1e3,
             threshold_lr_lower : 1e-3,
+            threshold_pruning : 1e-2,
         }
     }
 }
@@ -46,6 +48,7 @@ impl Clone for Config {
             fov : self.fov,
             threshold_lr_upper : self.threshold_lr_upper,
             threshold_lr_lower : self.threshold_lr_lower,
+            threshold_pruning : self.threshold_pruning,
         }
     }
 }

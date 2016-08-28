@@ -1,5 +1,5 @@
 use filter::tracking_sim::Linalg;
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 
 #[test]
@@ -12,7 +12,8 @@ fn cholesky_decomposition() {
 			0.5 * t.powf(2.0), 0.0, t, 0.0,
 			0.0, 0.5 * t.powf(2.0), 0.0, t]);
 	
-	let g = q_matrix.cholesky();
+	let g = q_matrix.cholesky().unwrap();
+
 	let result = &g * g.transpose() - q_matrix;
 	for i in result.data() {
 		assert!(i.abs() < 0.01);
@@ -57,7 +58,7 @@ fn mvnrnd_draw_multivariate_numbers() {
 #[test]
 pub fn inv() {
 	let a = Matrix::<f64>::new(2,2,vec![10.0, 5.0, -3.0, 7.0]);
-	let b = a.inverse();
+	let b = a.inverse().unwrap();
 	let result = Matrix::<f64>::identity(2) - &a * &b;
 	for i in result.data() {
 		assert!(i.abs() < 0.01);

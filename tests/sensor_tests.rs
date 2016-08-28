@@ -1,7 +1,7 @@
 use filter::tracking_sim::Target;
 use filter::tracking_sim::Sensor;
 use filter::tracking_sim::Config;
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 
 #[test]
@@ -19,7 +19,7 @@ fn measure_target_position() {
     let n = 10000;
     let mut samples = Vec::new();
     for _ in 0..n {
-        let z = sensor.measure(&target);
+        let z = sensor.measure(vec![&target]);
         samples.push(z);
     }
 
@@ -66,7 +66,7 @@ fn false_measurements_a() {
     let mut num_msrs = Vec::new();
 
     for _ in 0..n {
-        let msrs = sensor.measure(&target);
+        let msrs = sensor.measure(vec![&target]);
         num_msrs.push(msrs.len() as u64);
     }
 

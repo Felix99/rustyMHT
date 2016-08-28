@@ -5,7 +5,7 @@ use filter::tracking_sim::Manager;
 use filter::tracking_sim::Track;
 use filter::tracking_sim::Measurement;
 
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 
 
 
@@ -17,7 +17,7 @@ fn process_single_measurement() {
     config.p_D = 1.0;
     config.rho_F = 0.0;
     let mut sensor = Sensor::new(config.clone());
-    let z = sensor.measure(&target);
+    let z = sensor.measure(vec![&target]);
     assert!(z.len() == 1);
 
     let mut manager = Manager::new(config.clone());

@@ -3,7 +3,7 @@ use filter::tracking_sim::Config;
 use filter::tracking_sim::Track;
 use filter::tracking_sim::Hypothesis;
 use filter::tracking_sim::Measurement;
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 use std::f64;
 
 

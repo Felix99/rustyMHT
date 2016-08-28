@@ -1,4 +1,4 @@
-use rm::linalg::matrix::Matrix;
+use rm::linalg::Matrix;
 use filter::tracking_sim::Target;
 
 

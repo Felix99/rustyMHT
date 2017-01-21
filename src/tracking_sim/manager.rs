@@ -2,7 +2,7 @@ use tracking_sim::Config;
 use tracking_sim::Track;
 use tracking_sim::Measurement;
 use tracking_sim::Filter;
-
+use rm::prelude::*;
 
 
 pub struct Manager {

@@ -21,3 +21,4 @@ pub use tracking_sim::hypothesis::Hypothesis;
 pub use tracking_sim::measurement::Measurement;
 pub use tracking_sim::manager::Manager;
 pub use tracking_sim::merger::Merger;
+pub use tracking_sim::merger::IsSimilar;

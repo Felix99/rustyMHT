@@ -1,6 +1,7 @@
 use rm::prelude::*;
 
 use tracking_sim::Hypothesis;
+use tracking_sim::IsSimilar;
 
 pub struct Track {
     pub state : Matrix<f64>,
@@ -128,5 +129,22 @@ impl Clone for Track {
             id : self.id,
         }
     }
+}
+
+impl IsSimilar for Track {
+    fn is_similar(&self, other: &Self, mu_similar: f64) -> bool {
+        let d = &self.state - &other.state;
+        let covar = &self.covar + &other.covar;
+        let covar_inv_res = covar.inverse();
+        if covar_inv_res.is_ok() {
+            let covar_inv = covar_inv_res.unwrap();
+            let stat_dist = (d.transpose() * &covar_inv * &d)[[0, 0]];
+            return stat_dist < mu_similar;
+        } else {
+            return false;
+        }
+
+    }
+
 }
 

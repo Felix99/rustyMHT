@@ -2,6 +2,7 @@ use tracking_sim::Config;
 use tracking_sim::Track;
 use tracking_sim::Measurement;
 use tracking_sim::Filter;
+use tracking_sim::Merger;
 use rm::prelude::*;
 
 

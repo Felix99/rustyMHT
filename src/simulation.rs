@@ -1,12 +1,23 @@
 extern crate rusty_machine as rm;
-use rm::linalg::Matrix;
+use rm::prelude::*;
 
 use tracking_sim::Config;
 use tracking_sim::Target;
 use tracking_sim::Linalg;
+use tracking_sim::Manager;
+use tracking_sim::Sensor;
 
-pub fn run_sim() {
-    let config = Config {
+
+pub struct SimConfig {
+    pub steps : u32,
+    pub num_targets : u32,
+    pub fov : ((f64,f64),(f64,f64)),
+    pub config : Config,
+}
+
+impl SimConfig {
+    pub fn new() -> SimConfig {
+        let config = Config {
             msr_covar : Matrix::<f64>::identity(2),
             msr_matrix : Matrix::<f64>::new(2,4,vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
             q : 1.0,
@@ -21,26 +32,48 @@ pub fn run_sim() {
             threshold_pruning : 1e-2,
         };
 
-    let num_targets = 10;
-    let targets = generate_targets(&config,num_targets);
+        SimConfig {
+            steps : 100,
+            num_targets : 10,
+            fov : ((0.0,1e3),(0.0,1e3)),
+            config : config,
+        }
+    }
+}
+
+
+pub fn run_sim() {
+    let sim_config = SimConfig::new();
+    let mut manager = Manager::new(sim_config.config.clone());
+    let mut sensor = Sensor::new(sim_config.config.clone());
+    let targets = generate_targets(&sim_config);
     for t in targets.iter() {
         println!("state: \n{}",t.state)
     }
 
+    for step in 0..sim_config.steps {
+        println!("step: {}", step);
+        let msrs = sensor.measure(&targets);
+        manager.process(msrs)
+
+    }
+
+
+
 
 }
 
-fn generate_targets(config: &Config, num_targets : i32) -> Vec<Target> {
+fn generate_targets(config: &SimConfig) -> Vec<Target> {
     let mut la = Linalg::new();
-    let x_size = (config.fov.unwrap().0).1 - (config.fov.unwrap().0).0;
-    let y_size = (config.fov.unwrap().1).1 - (config.fov.unwrap().1).0;
+    let x_size = (config.fov.0).1 - (config.fov.0).0;
+    let y_size = (config.fov.1).1 - (config.fov.1).0;
     let mut targets = Vec::new();
-    for _ in 0..num_targets {
-        let x = la.uniform((config.fov.unwrap().0).0,(config.fov.unwrap().0).1);
-        let y = la.uniform((config.fov.unwrap().1).0,(config.fov.unwrap().1).1);
-        let vel = la.mvnrnd(&Matrix::<f64>::zeros(2,1),&(Matrix::<f64>::identity(2) * config.q));
+    for _ in 0..config.num_targets {
+        let x = la.uniform((config.fov.0).0,(config.fov.0).1);
+        let y = la.uniform((config.fov.1).0,(config.fov.1).1);
+        let vel = la.mvnrnd(&Matrix::<f64>::zeros(2,1),&(Matrix::<f64>::identity(2) * config.config.q));
         let state = Matrix::<f64>::new(4,1,vec![x,y,vel[[0,0]],vel[[1,0]]]);
-        let new_target = Target::new(state,config.delta_t,config.q);
+        let new_target = Target::new(state,config.config.delta_t,config.config.q);
         targets.push(new_target);
     }
     targets

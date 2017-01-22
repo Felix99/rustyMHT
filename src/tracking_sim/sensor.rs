@@ -16,7 +16,7 @@ impl Sensor {
         }
     }
 
-    pub fn measure(&mut self, targets: Vec<&Target>) -> Vec<Measurement> {
+    pub fn measure(&mut self, targets: &Vec<Target>) -> Vec<Measurement> {
         if self.config.rho_F > 0.0 {
             let mut fa = self.false_measurements();
             for z in self.target_measurement(targets).iter() {
@@ -28,7 +28,7 @@ impl Sensor {
         }
     }
 
-    fn target_measurement(&mut self, targets: Vec<&Target>) -> Vec<Measurement> {
+    fn target_measurement(&mut self, targets: &Vec<Target>) -> Vec<Measurement> {
         let mut res = Vec::new();
         for t in targets {
             let b = self.target_detection();

@@ -8,6 +8,7 @@ pub mod track;
 pub mod hypothesis;
 pub mod measurement;
 pub mod manager;
+pub mod merger;
 
 pub use tracking_sim::dynamics::Dynamics;
 pub use tracking_sim::target::Target;
@@ -19,3 +20,4 @@ pub use tracking_sim::track::Track;
 pub use tracking_sim::hypothesis::Hypothesis;
 pub use tracking_sim::measurement::Measurement;
 pub use tracking_sim::manager::Manager;
+pub use tracking_sim::merger::Merger;

@@ -1,15 +1,15 @@
 
-pub trait Merger {
+pub trait Merger<T: IsSimilar + Clone> {
     // to be implemented
-    fn merge_all<T>(&self, to_merge: Vec<T>) -> T;
+    fn merge_all(&self, to_merge: Vec<T>) -> T;
 
-    fn merge<T>(&self, stack: &Vec<T>, threshold : f64) -> Vec<T> where T: IsSimilar + Clone {
+    fn merge(&self, stack: &Vec<T>, threshold : f64) -> Vec<T> {
         let merged : Vec<T> = Vec::new();
         let result = self.merge_local(&merged, &stack, threshold);
         result
     }
 
-    fn merge_local<T>(&self, merged: &Vec<T>, stack: &Vec<T>, threshold : f64) -> Vec<T> where T: IsSimilar + Clone {
+    fn merge_local(&self, merged: &Vec<T>, stack: &Vec<T>, threshold : f64) -> Vec<T> {
         if stack.is_empty() {
             return merged.clone();
         } else {
@@ -21,7 +21,7 @@ pub trait Merger {
 
     }
 
-    fn find_elements_similar_to_first<T>(&self, stack: &Vec<T>, threshold : f64) -> (Vec<T>,Vec<T>) where T: IsSimilar + Clone {
+    fn find_elements_similar_to_first(&self, stack: &Vec<T>, threshold : f64) -> (Vec<T>,Vec<T>) where T: IsSimilar + Clone {
         let first = &stack[0];
         let mut to_merge : Vec<T> = Vec::new();
         let mut not_to_merge : Vec<T> = Vec::new();

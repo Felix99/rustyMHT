@@ -5,6 +5,7 @@ use tracking_sim::Config;
 use tracking_sim::Track;
 use tracking_sim::Measurement;
 use tracking_sim::Hypothesis;
+use tracking_sim::Merger;
 
 pub struct Filter {
     pub config : Config,
@@ -93,6 +94,8 @@ impl Filter {
             new_hypos.extend(new_hypos_for_h);
         }
         track.hypotheses = new_hypos;
+        self.prune_hypotheses(track);
+        track.hypotheses = self.merge(&track.hypotheses, 1_f64);
         track.update_state();
     }
     // returns: new hypotheses together with lr delta
@@ -131,8 +134,28 @@ impl Filter {
         } else {
             panic!("Matrix inversion failed!")
         }
-
-
     }
 
+    pub fn prune_hypotheses(&self, track: &mut Track) {
+        track.hypotheses = track.hypotheses.iter().filter(
+            |e| e.weight > self.config.threshold_pruning).cloned().collect::<Vec<_>>();
+        track.normalize_weights();
+    }
+}
+
+impl Merger<Hypothesis> for Filter {
+    fn merge_all(&self, to_merge: Vec<Hypothesis>) -> Hypothesis {
+        let dim = &to_merge[0].state.rows();
+        let weight = to_merge.iter().fold(0_f64, |a,e| a + e.weight);
+        let mean = to_merge.iter().fold(Matrix::<f64>::zeros(*dim,1), |a,e| {
+            a + &e.state * e.weight
+        });
+        let covar = to_merge.iter().fold(Matrix::<f64>::zeros(*dim,*dim), |a,e| {
+            let v = &e.state - &mean;
+            let spread = &v * &v.transpose();
+            let unweighted = &e.covar + spread;
+            a + &unweighted * e.weight
+        });
+        Hypothesis::new(&mean,&covar,weight)
+    }
 }

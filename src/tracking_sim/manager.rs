@@ -89,3 +89,11 @@ impl Manager {
         }
     }
 }
+
+impl Merger<Track> for Manager {
+    fn merge_all(&self, to_merge: Vec<Track>) -> Track {
+        let max_lr = to_merge.iter().map(|e| &e.lr).cloned().fold(0./0., f64::max);
+        let idx = to_merge.iter().position(|e| &e.lr == &max_lr).unwrap();
+        to_merge[idx].clone()
+    }
+}

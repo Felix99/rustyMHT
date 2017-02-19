@@ -3,9 +3,10 @@
 
 extern crate rusty_machine as rm;
 extern crate rand;
-
+extern crate gnuplot;
 mod simulation;
 mod tracking_sim;
+mod plotter;
 use simulation::run_sim;
 
 fn main() {

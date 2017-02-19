@@ -88,6 +88,14 @@ impl Manager {
             }
         }
     }
+
+    pub fn get_tracks(&self) -> Vec<Track> {
+        let mut res = Vec::new();
+        for t in &self.tracks {
+            res.push(t.clone());
+        }
+        res
+    }
 }
 
 impl Merger<Track> for Manager {

@@ -52,3 +52,36 @@ impl Clone for Config {
         }
     }
 }
+
+pub struct SimConfig {
+    pub steps : u32,
+    pub num_targets : u32,
+    pub fov : ((f64,f64),(f64,f64)),
+    pub config : Config,
+}
+
+impl SimConfig {
+    pub fn new() -> SimConfig {
+        let config = Config {
+            msr_covar : Matrix::<f64>::identity(2),
+            msr_matrix : Matrix::<f64>::new(2,4,vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+            q : 1.0,
+            delta_t : 1.0,
+            init_covar :  Matrix::<f64>::identity(4) * 100.0,
+            p_D : 0.95,
+            rho_F : 1e-6,
+            mu_gating : 9.21,
+            fov : Some(((0.0,1e3),(0.0,1e3))),
+            threshold_lr_upper : 1e3,
+            threshold_lr_lower : 1e-3,
+            threshold_pruning : 1e-2,
+        };
+
+        SimConfig {
+            steps : 2,
+            num_targets : 1,
+            fov : ((0.0,1e3),(0.0,1e3)),
+            config : config,
+        }
+    }
+}

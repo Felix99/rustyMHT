@@ -16,6 +16,7 @@ pub use tracking_sim::linalg::Linalg;
 pub use tracking_sim::sensor::Sensor;
 pub use tracking_sim::filter::Filter;
 pub use tracking_sim::config::Config;
+pub use tracking_sim::config::SimConfig;
 pub use tracking_sim::track::Track;
 pub use tracking_sim::hypothesis::Hypothesis;
 pub use tracking_sim::measurement::Measurement;

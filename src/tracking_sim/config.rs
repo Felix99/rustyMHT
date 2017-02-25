@@ -78,8 +78,8 @@ impl SimConfig {
         };
 
         SimConfig {
-            steps : 2,
-            num_targets : 1,
+            steps : 100,
+            num_targets : 5,
             fov : ((0.0,1e3),(0.0,1e3)),
             config : config,
         }

@@ -2,13 +2,8 @@
 extern crate rusty_machine as rm;
 use rm::prelude::*;
 use tracking_sim::{Config, Target, Linalg, Manager, Sensor, SimConfig, Track};
-use plotter::Plotter;
-use matplotlib::{Env, Plot};
+use plotter::{Plotter, Env};
 use std::{thread, time};
-
-
-
-
 
 pub fn run_sim() {
     let env = Env::new();
@@ -31,15 +26,13 @@ pub fn run_sim() {
         manager.process(msrs);
         plotter.plot_tracks(&manager.tracks);
 
-        for t in &manager.tracks {
-            println!("{:?}", &t.state)
-        }
         //plotter.set_fov(&sim_config);
-        plotter.show();
+
         thread::sleep(time::Duration::from_millis(100));
 
 
     }
+    plotter.show();
 
 
 

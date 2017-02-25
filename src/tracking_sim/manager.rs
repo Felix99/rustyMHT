@@ -39,6 +39,8 @@ impl Manager {
             self.filter.update_mht(t,&assoc[i]);
         }
 
+        self.prune_tracks();
+
         // generate new tracks
         {
             for z in non_assoc.iter() {
@@ -92,7 +94,9 @@ impl Manager {
     pub fn get_tracks(&self) -> Vec<Track> {
         let mut res = Vec::new();
         for t in &self.tracks {
-            res.push(t.clone());
+            if t.id > 0 {
+                res.push(t.clone());
+            }
         }
         res
     }

@@ -3,7 +3,7 @@
 
 extern crate rusty_machine as rm;
 extern crate rand;
-extern crate gnuplot;
+extern crate matplotlib;
 mod simulation;
 mod tracking_sim;
 mod plotter;

@@ -3,6 +3,7 @@ extern crate rusty_machine as rm;
 use rm::prelude::*;
 use tracking_sim::{Config, Target, Linalg, Manager, Sensor, SimConfig, Track};
 use plotter::Plotter;
+use matplotlib::{Env, Plot};
 use std::{thread, time};
 
 
@@ -10,8 +11,9 @@ use std::{thread, time};
 
 
 pub fn run_sim() {
-    let mut plotter = Plotter::new();
-    //&plotter.test();
+    let env = Env::new();
+    let mut plotter = Plotter::new(&env);
+
     let sim_config = SimConfig::new();
     let mut manager = Manager::new(sim_config.config.clone());
     let mut sensor = Sensor::new(sim_config.config.clone());
@@ -23,24 +25,19 @@ pub fn run_sim() {
     for step in 0..sim_config.steps {
         println!("step: {}", step);
         let msrs = sensor.measure(&targets);
+
         plotter.clear();
-        //plotter.plot_measurements(&msrs);
-        let track = Track::new(&Matrix::zeros(2,1), &Matrix::zeros(2,2), 1.0);
-        //let tracks = &manager.tracks.clone();
+        plotter.plot_measurements(&msrs);
+        manager.process(msrs);
+        plotter.plot_tracks(&manager.tracks);
 
-        let tracks = &manager.get_tracks();
-        //plotter.plot_tracks(&manager.tracks);
-        plotter.plot_tracks(&tracks);
-
-        //let something = &manager.tracks.iter().map(|e| e.state.clone()).collect::<Vec<_>>();
-        //plotter.plot_something(&something);
         for t in &manager.tracks {
             println!("{:?}", &t.state)
         }
         //plotter.set_fov(&sim_config);
         plotter.show();
         thread::sleep(time::Duration::from_millis(100));
-        manager.process(msrs)
+
 
     }
 
